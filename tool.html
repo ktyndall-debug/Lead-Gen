@@ -645,11 +645,6 @@
             } catch (error) {
                 console.error('Search error:', error);
                 showError(`Search failed: ${error.message}`);
-                
-                showInfo('Showing demo data due to API issues...');
-                setTimeout(() => {
-                    displayDemoResults(location, businessType);
-                }, 1000);
             } finally {
                 showLoading(false);
             }
@@ -869,89 +864,6 @@
 
             html += '</div>';
             resultsContainer.innerHTML = html;
-        }
-
-        function displayDemoResults(location, businessType) {
-            const radius = document.getElementById('searchRadius').value;
-            const maxResults = document.getElementById('maxResults').value;
-            const demoBusinesses = generateDemoData(location, businessType, radius, parseInt(maxResults));
-            displayResults(demoBusinesses);
-            
-            document.getElementById('results').insertAdjacentHTML('afterbegin', `
-                <div class="error-message">
-                    <h4>⚠️ Demo Mode Active</h4>
-                    <p>Showing simulated data for "${businessType}" businesses within ${radius} miles of ${location}. For real data, ensure your API configuration is correct.</p>
-                </div>
-            `);
-        }
-
-        function generateDemoData(location, businessType, radius, maxResults) {
-            // Create demo businesses based on search term
-            const searchTerm = businessType.toLowerCase();
-            let businessNames = [];
-            let categoryType = 'business';
-            
-            // Generate business names based on search term
-            if (searchTerm.includes('restaurant') || searchTerm.includes('food') || searchTerm.includes('dining')) {
-                businessNames = ['Corner Bistro', 'Family Kitchen', 'Downtown Grill', 'Pasta Palace', 'Burger Barn', 'Cozy Cafe', 'Pizza Corner', 'Taco Shop', 'Diner Deluxe', 'Steakhouse'];
-                categoryType = 'restaurant';
-            } else if (searchTerm.includes('auto') || searchTerm.includes('car') || searchTerm.includes('repair')) {
-                businessNames = ['Quick Fix Auto', 'Reliable Motors', 'Expert Auto Care', 'Main Street Garage', 'Pro Auto Service', 'Elite Auto', 'Fast Lane', 'Precision Motors', 'Auto Masters', 'Car Care Plus'];
-                categoryType = 'auto repair';
-            } else if (searchTerm.includes('salon') || searchTerm.includes('beauty') || searchTerm.includes('hair')) {
-                businessNames = ['Style Studio', 'Beauty Corner', 'Glamour Salon', 'Elegant Hair Design', 'Luxe Beauty Bar', 'Chic Cuts', 'Beauty Boutique', 'Hair Haven', 'Salon Supreme', 'Beauty Bliss'];
-                categoryType = 'beauty salon';
-            } else if (searchTerm.includes('dentist') || searchTerm.includes('dental')) {
-                businessNames = ['Smile Dental', 'Family Dentistry', 'Bright Teeth Clinic', 'Gentle Dental Care', 'Modern Dentistry', 'Premier Dental', 'Comfort Dental', 'Advanced Dentistry', 'Caring Dentists', 'Elite Dental'];
-                categoryType = 'dentist';
-            } else if (searchTerm.includes('lawyer') || searchTerm.includes('attorney') || searchTerm.includes('law')) {
-                businessNames = ['Smith & Associates', 'Legal Solutions', 'Justice Law Firm', 'Professional Legal', 'Expert Attorneys', 'Trusted Legal', 'Premier Law', 'Reliable Legal', 'Local Law Office', 'Legal Advocates'];
-                categoryType = 'lawyer';
-            } else if (searchTerm.includes('gym') || searchTerm.includes('fitness')) {
-                businessNames = ['FitLife Gym', 'Power Fitness', 'Elite Training', 'Muscle Factory', 'Wellness Center', 'Strong Fitness', 'Active Life Gym', 'Premier Fitness', 'Health Club', 'Fitness Plus'];
-                categoryType = 'gym';
-            } else {
-                // Generic business names for any other search term
-                businessNames = [`${businessType} Pro`, `Quality ${businessType}`, `Expert ${businessType}`, `Local ${businessType}`, `Premium ${businessType}`, `Trusted ${businessType}`, `Professional ${businessType}`, `Reliable ${businessType}`, `Elite ${businessType}`, `Premier ${businessType}`];
-                categoryType = businessType;
-            }
-
-            const businesses = [];
-
-            // Adjust number of businesses based on radius and maxResults
-            let businessCount = Math.min(maxResults, businessNames.length);
-            if (radius <= 5) {
-                businessCount = Math.min(businessCount, Math.floor(maxResults * 0.6));
-            } else if (radius <= 10) {
-                businessCount = Math.min(businessCount, Math.floor(maxResults * 0.8));
-            }
-
-            // Generate businesses with addresses that reflect the radius
-            for (let i = 0; i < businessCount; i++) {
-                const name = businessNames[i] || `${businessType} ${i + 1}`;
-                
-                const streetNumbers = Array.from({length: 15}, (_, idx) => 100 + idx * 50);
-                const streetNames = ['Main St', 'Oak Ave', 'Elm St', 'First St', 'Park Blvd', 'Center St', 'Market St', 'Broadway', 'Union Ave', 'Liberty St', 'Church St', 'Pine Ave', 'Cedar St', 'Maple Dr', 'Washington St'];
-                
-                const business = {
-                    name: name,
-                    address: `${streetNumbers[i % streetNumbers.length]} ${streetNames[i % streetNames.length]}, ${location}`,
-                    phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-                    email: generateEstimatedEmail(name),
-                    website: Math.random() > 0.6 ? null : `https://www.${name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '')}.com`,
-                    googleReviews: Math.floor(Math.random() * 50),
-                    rating: +(Math.random() * 2 + 3).toFixed(1),
-                    hasGoogleBusiness: Math.random() > 0.2,
-                    businessType: categoryType,
-                    placeId: `demo_place_${i}`,
-                    distance: +(Math.random() * radius).toFixed(1)
-                };
-
-                const opportunityData = calculateOpportunityScore(business);
-                businesses.push({ ...business, ...opportunityData });
-            }
-
-            return businesses.sort((a, b) => b.score - a.score);
         }
 
         // Generate inline business report (no modal)
