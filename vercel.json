@@ -1,1 +1,10 @@
-{}
+{
+  "functions": {
+    "api/search-places.js": {
+      "runtime": "nodejs18.x"
+    },
+    "api/place-details.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
