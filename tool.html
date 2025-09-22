@@ -921,8 +921,9 @@
             initializeLocationAutocomplete();
         };
 
-        // Location autocomplete functionality - simplified and reliable  
+        // Location autocomplete functionality
         let locationTimeout = null;
+        let currentSuggestions = [];
         let selectedSuggestionIndex = -1;
 
         function initializeLocationAutocomplete() {
@@ -939,10 +940,10 @@
                     return;
                 }
 
-                // Show suggestions after a short delay
+                // Debounce the API calls
                 locationTimeout = setTimeout(() => {
                     fetchLocationSuggestions(query);
-                }, 200);
+                }, 300);
             });
 
             locationInput.addEventListener('keydown', function(e) {
@@ -965,9 +966,7 @@
                     case 'Enter':
                         e.preventDefault();
                         if (selectedSuggestionIndex >= 0) {
-                            const suggestionText = suggestions[selectedSuggestionIndex].textContent;
-                            document.getElementById('location').value = suggestionText;
-                            hideSuggestions();
+                            selectSuggestion(currentSuggestions[selectedSuggestionIndex]);
                         }
                         break;
                     case 'Escape':
@@ -985,67 +984,16 @@
         }
 
         async function fetchLocationSuggestions(query) {
-            // Use local city list instead of external API for reliability
-            displayLocationSuggestions(query);
-        }
-
-        function displayLocationSuggestions(query) {
-            const suggestions = getLocationMatches(query);
-            const suggestionsDiv = document.getElementById('location-suggestions');
-            
-            if (suggestions.length === 0) {
-                hideSuggestions();
-                return;
+            try {
+                // Use a geocoding service for location suggestions
+                // This is a basic implementation - in production you'd want to use Google Places Autocomplete API
+                const suggestions = await getLocationSuggestions(query);
+                displaySuggestions(suggestions);
+            } catch (error) {
+                console.warn('Location suggestions failed:', error);
+                // Fallback to basic suggestions
+                displayBasicSuggestions(query);
             }
-
-            let html = '';
-            suggestions.forEach((suggestion, index) => {
-                html += `<div class="location-suggestion" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`;
-            });
-
-            suggestionsDiv.innerHTML = html;
-            suggestionsDiv.style.display = 'block';
-            selectedSuggestionIndex = -1;
-        }
-
-        function getLocationMatches(query) {
-            const locations = [
-                // Major US Cities
-                'New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ',
-                'Philadelphia, PA', 'San Antonio, TX', 'San Diego, CA', 'Dallas, TX', 'Austin, TX',
-                'San Jose, CA', 'Fort Worth, TX', 'Jacksonville, FL', 'Columbus, OH', 'Charlotte, NC',
-                'Indianapolis, IN', 'San Francisco, CA', 'Seattle, WA', 'Denver, CO', 'Nashville, TN',
-                'Oklahoma City, OK', 'El Paso, TX', 'Washington, DC', 'Boston, MA', 'Las Vegas, NV',
-                'Portland, OR', 'Detroit, MI', 'Memphis, TN', 'Louisville, KY', 'Baltimore, MD',
-                'Milwaukee, WI', 'Albuquerque, NM', 'Fresno, CA', 'Tucson, AZ', 'Sacramento, CA',
-                'Mesa, AZ', 'Kansas City, MO', 'Atlanta, GA', 'Omaha, NE', 'Colorado Springs, CO',
-                'Raleigh, NC', 'Virginia Beach, VA', 'Miami, FL', 'Oakland, CA', 'Minneapolis, MN',
-                'Tampa, FL', 'New Orleans, LA', 'Arlington, TX', 'Wichita, KS', 'Cleveland, OH',
-                'Bakersfield, CA', 'Aurora, CO', 'Anaheim, CA', 'Honolulu, HI', 'Santa Ana, CA',
-                'Riverside, CA', 'Corpus Christi, TX', 'Lexington, KY', 'Henderson, NV', 'Stockton, CA',
-                'Saint Paul, MN', 'St. Louis, MO', 'Cincinnati, OH', 'Pittsburgh, PA', 'Greensboro, NC',
-                'Anchorage, AK', 'Plano, TX', 'Lincoln, NE', 'Orlando, FL', 'Irvine, CA',
-                'Newark, NJ', 'Toledo, OH', 'Durham, NC', 'Chula Vista, CA', 'Fort Wayne, IN',
-                'Jersey City, NJ', 'St. Petersburg, FL', 'Laredo, TX', 'Madison, WI', 'Chandler, AZ',
-                'Buffalo, NY', 'Lubbock, TX', 'Scottsdale, AZ', 'Reno, NV', 'Glendale, AZ',
-                'Gilbert, AZ', 'Winston-Salem, NC', 'North Las Vegas, NV', 'Norfolk, VA', 'Chesapeake, VA',
-                'Garland, TX', 'Irving, TX', 'Hialeah, FL', 'Fremont, CA', 'Boise, ID',
-                // Additional popular cities
-                'Birmingham, AL', 'Mobile, AL', 'Huntsville, AL', 'Little Rock, AR', 'Fayetteville, AR',
-                'Flagstaff, AZ', 'Tempe, AZ', 'Long Beach, CA', 'Modesto, CA', 'San Bernardino, CA',
-                'Fort Collins, CO', 'Boulder, CO', 'Hartford, CT', 'New Haven, CT', 'Wilmington, DE',
-                'Tallahassee, FL', 'Fort Lauderdale, FL', 'Clearwater, FL', 'Savannah, GA', 'Augusta, GA',
-                'Boise, ID', 'Rockford, IL', 'Peoria, IL', 'Fort Wayne, IN', 'Evansville, IN',
-                'Cedar Rapids, IA', 'Des Moines, IA', 'Topeka, KS', 'Bowling Green, KY', 'Baton Rouge, LA',
-                'Shreveport, LA', 'Portland, ME', 'Annapolis, MD', 'Springfield, MA', 'Worcester, MA',
-                'Grand Rapids, MI', 'Flint, MI', 'Duluth, MN', 'Jackson, MS', 'Springfield, MO',
-                'Billings, MT', 'Missoula, MT'
-            ];
-
-            const lowerQuery = query.toLowerCase();
-            return locations.filter(location => 
-                location.toLowerCase().includes(lowerQuery)
-            ).slice(0, 8); // Show max 8 suggestions
         }
 
         async function getLocationSuggestions(query) {
@@ -1464,12 +1412,9 @@
 
                 <!-- Action Buttons -->
                 <div style="margin-bottom: 50px; text-align: center;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto;">
-                        <button onclick="generateCustomerReport('${business.name}')" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; border: 3px solid transparent; box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);">
-                            ✨ Customer Presentation
-                        </button>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
                         <button onclick="downloadReport('${business.name}')" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            📄 Internal Report
+                            📄 Download Report
                         </button>
                         <button onclick="window.print()" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
                             🖨️ Print Report
@@ -1612,376 +1557,6 @@
             };
         }
 
-        // Generate customer-facing business analysis report
-        function generateCustomerReport(businessName) {
-            const business = window.currentBusinesses.find(b => b.name === businessName);
-            if (!business) return;
-            
-            const reportWindow = window.open('', '_blank');
-            const reportContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Business Analysis - ${business.name}</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            color: #1f2937;
-            background: #f8fafc;
-        }
-        
-        .report-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 50px;
-            text-align: center;
-            border-radius: 10px;
-            margin-bottom: 40px;
-        }
-        
-        .company-logo {
-            background: rgba(255,255,255,0.1);
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: inline-block;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .report-title {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-        
-        .business-name {
-            font-size: 1.5rem;
-            background: rgba(255,255,255,0.15);
-            padding: 15px 30px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        .metrics {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin: 40px 0;
-        }
-        
-        .metric-card {
-            background: white;
-            padding: 30px 20px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border-top: 4px solid #667eea;
-        }
-        
-        .metric-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-        
-        .metric-label {
-            font-size: 0.9rem;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        
-        .section {
-            margin-bottom: 50px;
-        }
-        
-        .section-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1f2937;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-        
-        .opportunity {
-            background: #fef2f2;
-            border: 2px solid #fecaca;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        
-        .opportunity-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #dc2626;
-            margin-bottom: 10px;
-        }
-        
-        .opportunity-text {
-            color: #7f1d1d;
-            margin-bottom: 10px;
-        }
-        
-        .opportunity-impact {
-            background: #dc2626;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .solution {
-            background: #f0fdf4;
-            border: 2px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        
-        .solution-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #059669;
-            margin-bottom: 10px;
-        }
-        
-        .solution-text {
-            color: #166534;
-            margin-bottom: 15px;
-        }
-        
-        .benefits {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        
-        .benefit {
-            background: rgba(16, 185, 129, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-        }
-        
-        .investment {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-            margin: 40px 0;
-        }
-        
-        .investment-amount {
-            font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-        
-        .roi {
-            background: #10b981;
-            color: white;
-            padding: 30px;
-            border-radius: 10px;
-            text-align: center;
-            margin-top: 20px;
-        }
-        
-        .contact {
-            background: #1f2937;
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            text-align: center;
-        }
-        
-        .contact-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-        
-        .contact-item {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 8px;
-        }
-        
-        @media print {
-            body { background: white; }
-            .report-container { box-shadow: none; }
-        }
-    </style>
-</head>
-<body>
-    <div class="report-container">
-        <header class="header">
-            <div class="company-logo">Your Company Logo</div>
-            <h1 class="report-title">Digital Business Analysis</h1>
-            <div class="business-name">${business.name}</div>
-        </header>
-        
-        <div class="metrics">
-            <div class="metric-card">
-                <div class="metric-value">${business.score}</div>
-                <div class="metric-label">Opportunity Score</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value">${business.rating || 'N/A'}</div>
-                <div class="metric-label">Current Rating</div>
-            </div>
-            <div class="metric-card">
-                <div class="metric-value">${business.googleReviews}</div>
-                <div class="metric-label">Online Reviews</div>
-            </div>
-        </div>
-        
-        <section class="section">
-            <h2 class="section-title">Growth Opportunities Identified</h2>
-            ${generateSimpleOpportunities(business)}
-        </section>
-        
-        <section class="section">
-            <h2 class="section-title">Recommended Solutions</h2>
-            ${generateSimpleSolutions(business)}
-        </section>
-        
-        <div class="investment">
-            <h3 style="font-size: 1.5rem; margin-bottom: 20px;">Investment Range</h3>
-            <div class="investment-amount">$5,000 - $12,000</div>
-            <p>Complete digital transformation package</p>
-            
-            <div class="roi">
-                <h4 style="font-size: 1.3rem; margin-bottom: 10px;">Expected ROI</h4>
-                <div style="font-size: 2rem; font-weight: 700;">300-500%</div>
-                <p>Within 12 months</p>
-            </div>
-        </div>
-        
-        <footer class="contact">
-            <h3 style="font-size: 1.8rem; margin-bottom: 20px;">Ready to Get Started?</h3>
-            <p style="font-size: 1.1rem; margin-bottom: 30px;">Contact us to discuss your digital transformation</p>
-            
-            <div class="contact-info">
-                <div class="contact-item">
-                    <strong>Phone</strong><br>
-                    Your Phone Number
-                </div>
-                <div class="contact-item">
-                    <strong>Email</strong><br>
-                    your.email@company.com
-                </div>
-                <div class="contact-item">
-                    <strong>Website</strong><br>
-                    www.yourcompany.com
-                </div>
-            </div>
-            
-            <p style="margin-top: 30px; font-size: 0.9rem; opacity: 0.8;">
-                Report generated on ${new Date().toLocaleDateString()}
-            </p>
-        </footer>
-    </div>
-</body>
-</html>`;
-
-            reportWindow.document.write(reportContent);
-            reportWindow.document.close();
-            
-            // Optional: Auto-print after a delay
-            setTimeout(() => {
-                if (confirm('Print this customer report?')) {
-                    reportWindow.print();
-                }
-            }, 1000);
-        }
-        
-        // Helper functions for simplified customer report
-        function generateSimpleOpportunities(business) {
-            let html = '';
-            
-            if (!business.website) {
-                html += `
-                    <div class="opportunity">
-                        <div class="opportunity-title">Missing Professional Website</div>
-                        <div class="opportunity-text">Your business lacks an online presence, causing customers to choose competitors who appear more established.</div>
-                        <div class="opportunity-impact">Impact: Missing 75% of customers who research online first</div>
-                    </div>
-                `;
-            }
-            
-            if (business.googleReviews < 20) {
-                html += `
-                    <div class="opportunity">
-                        <div class="opportunity-title">Limited Online Reviews</div>
-                        <div class="opportunity-text">With only ${business.googleReviews} reviews, your business appears less trustworthy than competitors.</div>
-                        <div class="opportunity-impact">Impact: 25% lower customer trust and visibility</div>
-                    </div>
-                `;
-            }
-            
-            html += `
-                <div class="opportunity">
-                    <div class="opportunity-title">Competitive Disadvantage</div>
-                    <div class="opportunity-text">Competitors with stronger digital presence are capturing your potential customers.</div>
-                    <div class="opportunity-impact">Impact: Lost revenue to less qualified competitors</div>
-                </div>
-            `;
-            
-            return html;
-        }
-        
-        function generateSimpleSolutions(business) {
-            return `
-                <div class="solution">
-                    <div class="solution-title">Professional Website Development</div>
-                    <div class="solution-text">Create a modern, mobile-responsive website that showcases your expertise and converts visitors into customers.</div>
-                    <div class="benefits">
-                        <div class="benefit"><strong>24/7 Marketing:</strong> Works around the clock</div>
-                        <div class="benefit"><strong>Higher Trust:</strong> Professional credibility</div>
-                    </div>
-                </div>
-                
-                <div class="solution">
-                    <div class="solution-title">Online Reputation Management</div>
-                    <div class="solution-text">Build systems to generate positive reviews and manage your online reputation professionally.</div>
-                    <div class="benefits">
-                        <div class="benefit"><strong>More Reviews:</strong> Encourage satisfied customers</div>
-                        <div class="benefit"><strong>Better Rankings:</strong> Google favors reviewed businesses</div>
-                    </div>
-                </div>
-                
-                <div class="solution">
-                    <div class="solution-title">Local SEO Optimization</div>
-                    <div class="solution-text">Dominate local search results when customers look for your services in your area.</div>
-                    <div class="benefits">
-                        <div class="benefit"><strong>Local Dominance:</strong> Appear first in searches</div>
-                        <div class="benefit"><strong>More Calls:</strong> Direct customer inquiries</div>
-                    </div>
-                </div>
-            `;
-        }
-            reportWindow.document.close();
-        }
-        
         // Download report functions
         function downloadReport(businessName) {
             const reportContent = document.getElementById('results').innerHTML;
