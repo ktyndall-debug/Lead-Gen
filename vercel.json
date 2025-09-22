@@ -1,10 +1,10 @@
 {
   "functions": {
     "api/search-places.js": {
-      "runtime": "nodejs18.x"
+      "maxDuration": 30
     },
     "api/place-details.js": {
-      "runtime": "nodejs18.x"
+      "maxDuration": 15
     }
   }
 }
