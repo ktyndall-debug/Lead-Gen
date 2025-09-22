@@ -921,9 +921,8 @@
             initializeLocationAutocomplete();
         };
 
-        // Location autocomplete functionality
+        // Location autocomplete functionality - simplified and reliable  
         let locationTimeout = null;
-        let currentSuggestions = [];
         let selectedSuggestionIndex = -1;
 
         function initializeLocationAutocomplete() {
@@ -940,10 +939,10 @@
                     return;
                 }
 
-                // Debounce the API calls
+                // Show suggestions after a short delay
                 locationTimeout = setTimeout(() => {
                     fetchLocationSuggestions(query);
-                }, 300);
+                }, 200);
             });
 
             locationInput.addEventListener('keydown', function(e) {
@@ -966,7 +965,9 @@
                     case 'Enter':
                         e.preventDefault();
                         if (selectedSuggestionIndex >= 0) {
-                            selectSuggestion(currentSuggestions[selectedSuggestionIndex]);
+                            const suggestionText = suggestions[selectedSuggestionIndex].textContent;
+                            document.getElementById('location').value = suggestionText;
+                            hideSuggestions();
                         }
                         break;
                     case 'Escape':
@@ -984,16 +985,67 @@
         }
 
         async function fetchLocationSuggestions(query) {
-            try {
-                // Use a geocoding service for location suggestions
-                // This is a basic implementation - in production you'd want to use Google Places Autocomplete API
-                const suggestions = await getLocationSuggestions(query);
-                displaySuggestions(suggestions);
-            } catch (error) {
-                console.warn('Location suggestions failed:', error);
-                // Fallback to basic suggestions
-                displayBasicSuggestions(query);
+            // Use local city list instead of external API for reliability
+            displayLocationSuggestions(query);
+        }
+
+        function displayLocationSuggestions(query) {
+            const suggestions = getLocationMatches(query);
+            const suggestionsDiv = document.getElementById('location-suggestions');
+            
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
             }
+
+            let html = '';
+            suggestions.forEach((suggestion, index) => {
+                html += `<div class="location-suggestion" onclick="selectSuggestion('${suggestion}')">${suggestion}</div>`;
+            });
+
+            suggestionsDiv.innerHTML = html;
+            suggestionsDiv.style.display = 'block';
+            selectedSuggestionIndex = -1;
+        }
+
+        function getLocationMatches(query) {
+            const locations = [
+                // Major US Cities
+                'New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ',
+                'Philadelphia, PA', 'San Antonio, TX', 'San Diego, CA', 'Dallas, TX', 'Austin, TX',
+                'San Jose, CA', 'Fort Worth, TX', 'Jacksonville, FL', 'Columbus, OH', 'Charlotte, NC',
+                'Indianapolis, IN', 'San Francisco, CA', 'Seattle, WA', 'Denver, CO', 'Nashville, TN',
+                'Oklahoma City, OK', 'El Paso, TX', 'Washington, DC', 'Boston, MA', 'Las Vegas, NV',
+                'Portland, OR', 'Detroit, MI', 'Memphis, TN', 'Louisville, KY', 'Baltimore, MD',
+                'Milwaukee, WI', 'Albuquerque, NM', 'Fresno, CA', 'Tucson, AZ', 'Sacramento, CA',
+                'Mesa, AZ', 'Kansas City, MO', 'Atlanta, GA', 'Omaha, NE', 'Colorado Springs, CO',
+                'Raleigh, NC', 'Virginia Beach, VA', 'Miami, FL', 'Oakland, CA', 'Minneapolis, MN',
+                'Tampa, FL', 'New Orleans, LA', 'Arlington, TX', 'Wichita, KS', 'Cleveland, OH',
+                'Bakersfield, CA', 'Aurora, CO', 'Anaheim, CA', 'Honolulu, HI', 'Santa Ana, CA',
+                'Riverside, CA', 'Corpus Christi, TX', 'Lexington, KY', 'Henderson, NV', 'Stockton, CA',
+                'Saint Paul, MN', 'St. Louis, MO', 'Cincinnati, OH', 'Pittsburgh, PA', 'Greensboro, NC',
+                'Anchorage, AK', 'Plano, TX', 'Lincoln, NE', 'Orlando, FL', 'Irvine, CA',
+                'Newark, NJ', 'Toledo, OH', 'Durham, NC', 'Chula Vista, CA', 'Fort Wayne, IN',
+                'Jersey City, NJ', 'St. Petersburg, FL', 'Laredo, TX', 'Madison, WI', 'Chandler, AZ',
+                'Buffalo, NY', 'Lubbock, TX', 'Scottsdale, AZ', 'Reno, NV', 'Glendale, AZ',
+                'Gilbert, AZ', 'Winston-Salem, NC', 'North Las Vegas, NV', 'Norfolk, VA', 'Chesapeake, VA',
+                'Garland, TX', 'Irving, TX', 'Hialeah, FL', 'Fremont, CA', 'Boise, ID',
+                // Additional popular cities
+                'Birmingham, AL', 'Mobile, AL', 'Huntsville, AL', 'Little Rock, AR', 'Fayetteville, AR',
+                'Flagstaff, AZ', 'Tempe, AZ', 'Long Beach, CA', 'Modesto, CA', 'San Bernardino, CA',
+                'Fort Collins, CO', 'Boulder, CO', 'Hartford, CT', 'New Haven, CT', 'Wilmington, DE',
+                'Tallahassee, FL', 'Fort Lauderdale, FL', 'Clearwater, FL', 'Savannah, GA', 'Augusta, GA',
+                'Boise, ID', 'Rockford, IL', 'Peoria, IL', 'Fort Wayne, IN', 'Evansville, IN',
+                'Cedar Rapids, IA', 'Des Moines, IA', 'Topeka, KS', 'Bowling Green, KY', 'Baton Rouge, LA',
+                'Shreveport, LA', 'Portland, ME', 'Annapolis, MD', 'Springfield, MA', 'Worcester, MA',
+                'Grand Rapids, MI', 'Flint, MI', 'Duluth, MN', 'Jackson, MS', 'Springfield, MO',
+                'Billings, MT', 'Missoula, MT'
+            ];
+
+            const lowerQuery = query.toLowerCase();
+            return locations.filter(location => 
+                location.toLowerCase().includes(lowerQuery)
+            ).slice(0, 8); // Show max 8 suggestions
         }
 
         async function getLocationSuggestions(query) {
