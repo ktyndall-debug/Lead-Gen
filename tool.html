@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Intelligence Tool - Find Revenue Opportunities</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon-32x32.png">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-600: #475569;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary);
+        }
+
+        /* Tool Section */
+        .tool-section {
+            padding: 60px 0;
+        }
+
+        .tool-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .tool-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+        }
+
+        .tool-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray-600);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            margin-bottom: 40px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 14px 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f4f6;
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        /* Results */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin: 0;
+        }
+
+        .results-count {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .business-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .business-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid #f1f5f9;
+        }
+
+        .business-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .business-card-header {
+            padding: 25px 25px 15px 25px;
+            border-bottom: 1px solid #f8fafc;
+        }
+
+        .business-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 5px;
+        }
+
+        .business-type {
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .business-card-body {
+            padding: 20px 25px;
+        }
+
+        .business-info {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .info-icon {
+            width: 16px;
+            margin-right: 12px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .business-card-footer {
+            padding: 20px 25px 25px 25px;
+            background: var(--gray-50);
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .opportunity-badge {
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .high-opportunity {
+            background: linear-gradient(135deg, var(--success), #059669);
+        }
+
+        .medium-opportunity {
+            background: linear-gradient(135deg, var(--warning), #d97706);
+        }
+
+        .low-opportunity {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+
+        .generate-report-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .generate-report-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        .business-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Messages */
+        .error-message, .info-message {
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .info-message {
+            background: #e0f2fe;
+            border: 1px solid #81d4fa;
+            color: #01579b;
+        }
+
+        .contact-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .contact-link:hover {
+            text-decoration: underline;
+        }
+
+        .website-missing {
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+        .issues-list {
+            color: var(--danger);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Location Autocomplete Suggestions */
+        .location-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .location-suggestion {
+            padding: 12px 18px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .location-suggestion:hover,
+        .location-suggestion.highlighted {
+            background-color: var(--gray-50);
+        }
+
+        .location-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .location-suggestion .main-text {
+            font-weight: 500;
+            color: var(--gray-900);
+        }
+
+        .location-suggestion .secondary-text {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 2px;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                gap: 20px;
+            }
+
+            .tool-title {
+                font-size: 2rem;
+            }
+
+            .search-container {
+                padding: 25px;
+            }
+
+            .search-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .business-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .results-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .business-card-footer {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+
+            .generate-report-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">Business Intelligence Pro</a>
+                <nav class="nav-links">
+                    <a href="index.html" class="nav-link">Home</a>
+                    <a href="tool.html" class="nav-link">Tool</a>
+                    <a href="mailto:support@businessintelligencepro.com" class="nav-link">Support</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tool Section -->
+    <section class="tool-section">
+        <div class="container">
+            <div class="tool-header">
+                <h1 class="tool-title">Business Intelligence Tool</h1>
+                <p class="tool-subtitle">Enter any location to discover businesses with digital marketing gaps in your area</p>
+            </div>
+
+            <div class="search-container">
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label for="location">📍 Target Market Location</label>
+                        <input type="text" id="location" placeholder="Enter city, state, or ZIP code (e.g., Austin, TX)" required autocomplete="off">
+                        <div id="location-suggestions" class="location-suggestions"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="searchRadius">📏 Search Radius</label>
+                        <select id="searchRadius">
+                            <option value="0">City Center Only</option>
+                            <option value="5" selected>5 miles radius</option>
+                            <option value="10">10 miles radius</option>
+                            <option value="15">15 miles radius</option>
+                            <option value="20">20 miles radius</option>
+                            <option value="25">25 miles radius</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="search-grid">
+                    <div class="form-group">
+                        <label for="businessType">🏢 Search Business Type or Name</label>
+                        <input type="text" id="businessType" placeholder="e.g., restaurants, auto repair, hair salons, or specific business names" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxResults">📊 Maximum Results</label>
+                        <select id="maxResults">
+                            <option value="10">10 businesses</option>
+                            <option value="20" selected>20 businesses</option>
+                            <option value="30">30 businesses</option>
+                            <option value="50">50 businesses</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="search-btn" onclick="searchBusinesses()">
+                    🚀 Find Revenue Opportunities
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p class="loading-text">Analyzing market data and opportunity scores...</p>
+            </div>
+
+            <div class="results" id="results"></div>
+        </div>
+    </section>
+
+    <script>
+        // Configuration for Vercel deployment
+        const config = {
+            backendUrl: window.location.origin,
+            requestDelay: 200
+        };
+
+        // Store businesses globally for report generation
+        window.currentBusinesses = [];
+
+        // Main search function using Vercel API
+        async function searchBusinesses() {
+            const location = document.getElementById('location').value.trim();
+            const businessType = document.getElementById('businessType').value.trim();
+            const radius = document.getElementById('searchRadius').value;
+            const maxResults = document.getElementById('maxResults').value;
+
+            if (!location) {
+                showError('Please enter a location');
+                return;
+            }
+
+            if (!businessType) {
+                showError('Please enter a business type or name to search for');
+                return;
+            }
+
+            showLoading(true);
+            clearResults();
+
+            try {
+                const response = await fetch(`${config.backendUrl}/api/search-places`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        location,
+                        businessType,
+                        radius: parseInt(radius),
+                        maxResults: parseInt(maxResults)
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    const processedBusinesses = await processBusinessData(data.results);
+                    displayResults(processedBusinesses);
+                } else {
+                    showInfo(`No businesses found for "${businessType}" within ${radius} miles of "${location}". Try broader search terms or increase the radius.`);
+                }
+
+            } catch (error) {
+                console.error('Search error:', error);
+                showError(`Search failed: ${error.message}`);
+                
+                showInfo('Showing demo data due to API issues...');
+                setTimeout(() => {
+                    displayDemoResults(location, businessType);
+                }, 1000);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Get place details from Vercel API
+        async function getPlaceDetails(placeId) {
+            try {
+                const response = await fetch(`${config.backendUrl}/api/place-details`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ placeId })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Details API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.result || {};
+            } catch (error) {
+                console.warn('Failed to get place details:', error);
+                return {};
+            }
+        }
+
+        // Process business data and get additional details
+        async function processBusinessData(places) {
+            const businesses = [];
+            const maxResults = document.getElementById('maxResults').value;
+            
+            for (let i = 0; i < Math.min(places.length, maxResults); i++) {
+                const place = places[i];
+                
+                try {
+                    const details = await getPlaceDetails(place.place_id);
+                    
+                    const business = {
+                        name: place.name,
+                        address: place.formatted_address || place.vicinity || 'Address not available',
+                        phone: details.formatted_phone_number || 'Phone not available',
+                        email: generateEstimatedEmail(place.name),
+                        website: details.website || null,
+                        googleReviews: place.user_ratings_total || 0,
+                        rating: place.rating || 0,
+                        hasGoogleBusiness: true,
+                        businessType: place.types ? place.types[0].replace(/_/g, ' ') : 'business',
+                        placeId: place.place_id
+                    };
+
+                    const opportunityData = calculateOpportunityScore(business);
+                    businesses.push({ ...business, ...opportunityData });
+                    
+                    await new Promise(resolve => setTimeout(resolve, config.requestDelay));
+                    
+                } catch (error) {
+                    console.warn(`Failed to process place ${place.name}:`, error);
+                    
+                    const basicBusiness = {
+                        name: place.name,
+                        address: place.formatted_address || place.vicinity || 'Address not available',
+                        phone: 'Phone not available',
+                        email: generateEstimatedEmail(place.name),
+                        website: null,
+                        googleReviews: place.user_ratings_total || 0,
+                        rating: place.rating || 0,
+                        hasGoogleBusiness: true,
+                        businessType: place.types ? place.types[0].replace(/_/g, ' ') : 'business',
+                        placeId: place.place_id
+                    };
+                    
+                    const opportunityData = calculateOpportunityScore(basicBusiness);
+                    businesses.push({ ...basicBusiness, ...opportunityData });
+                }
+            }
+            
+            return businesses.sort((a, b) => b.score - a.score);
+        }
+
+        function calculateOpportunityScore(business) {
+            let score = 0;
+            let reasons = [];
+            
+            if (!business.website) {
+                score += 30;
+                reasons.push('No website');
+            }
+            
+            if (business.googleReviews < 10) {
+                score += 25;
+                reasons.push('Limited reviews (' + business.googleReviews + ')');
+            }
+            
+            if (business.rating === 0) {
+                score += 20;
+                reasons.push('No rating');
+            } else if (business.rating < 4.0) {
+                score += 15;
+                reasons.push('Low rating (' + business.rating + '★)');
+            }
+            
+            if (business.phone === 'Phone not available') {
+                score += 15;
+                reasons.push('No phone number listed');
+            }
+            
+            if (!business.hasGoogleBusiness) {
+                score += 10;
+                reasons.push('Unverified Google Business');
+            }
+            
+            return {
+                score: Math.min(score, 100),
+                reasons: reasons
+            };
+        }
+
+        function generateEstimatedEmail(businessName) {
+            const cleanName = businessName.toLowerCase()
+                .replace(/[^a-z0-9\s]/g, '')
+                .replace(/\s+/g, '');
+            
+            const domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
+            const randomDomain = domains[Math.floor(Math.random() * domains.length)];
+            
+            return `${cleanName}@${randomDomain}`;
+        }
+
+        function getOpportunityLevel(score) {
+            if (score >= 70) return { level: 'High', class: 'high-opportunity' };
+            if (score >= 40) return { level: 'Medium', class: 'medium-opportunity' };
+            return { level: 'Low', class: 'low-opportunity' };
+        }
+
+        function displayResults(businesses) {
+            const resultsContainer = document.getElementById('results');
+            window.currentBusinesses = businesses;
+            
+            if (businesses.length === 0) {
+                resultsContainer.innerHTML = '<div class="info-message">No businesses found matching your criteria.</div>';
+                return;
+            }
+
+            let html = `
+                <div class="results-header">
+                    <h2 class="results-title">🎯 Market Analysis Results</h2>
+                    <div class="results-count">${businesses.length} Opportunities Found</div>
+                </div>
+                <div class="business-grid">
+            `;
+            
+            businesses.forEach((business, index) => {
+                const opportunity = getOpportunityLevel(business.score);
+                
+                html += `
+                    <div class="business-card" onclick="openBusinessReport(${index})">
+                        <div class="business-card-header">
+                            <div class="business-name">${business.name}</div>
+                            <div class="business-type">${business.businessType}</div>
+                        </div>
+                        
+                        <div class="business-card-body">
+                            <div class="business-info">
+                                <span class="info-icon">📍</span>
+                                <span>${business.address}</span>
+                            </div>
+                            
+                            <div class="business-info">
+                                <span class="info-icon">📞</span>
+                                <span><a href="tel:${business.phone}" class="contact-link" onclick="event.stopPropagation()">${business.phone}</a></span>
+                            </div>
+                            
+                            <div class="business-info">
+                                <span class="info-icon">🌐</span>
+                                <span>
+                                    ${business.website ? 
+                                        `<a href="${business.website}" target="_blank" class="contact-link" onclick="event.stopPropagation()">Visit Website</a>` : 
+                                        '<span class="website-missing">No Website</span>'
+                                    }
+                                </span>
+                            </div>
+                            
+                            <div class="business-info">
+                                <span class="info-icon">⚠️</span>
+                                <span class="issues-list">${business.reasons ? business.reasons.slice(0, 2).join(', ') : 'Analysis pending'}</span>
+                            </div>
+                            
+                            <div class="business-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${business.rating || 'N/A'}</div>
+                                    <div class="stat-label">Rating</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${business.googleReviews}</div>
+                                    <div class="stat-label">Reviews</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${business.score}</div>
+                                    <div class="stat-label">Opportunity</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="business-card-footer">
+                            <div class="opportunity-badge ${opportunity.class}">
+                                ${opportunity.level} Priority
+                            </div>
+                            <button class="generate-report-btn" onclick="event.stopPropagation(); openBusinessReport(${index})">
+                                📊 Generate Report
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            resultsContainer.innerHTML = html;
+        }
+
+        function displayDemoResults(location, businessType) {
+            const radius = document.getElementById('searchRadius').value;
+            const maxResults = document.getElementById('maxResults').value;
+            const demoBusinesses = generateDemoData(location, businessType, radius, parseInt(maxResults));
+            displayResults(demoBusinesses);
+            
+            document.getElementById('results').insertAdjacentHTML('afterbegin', `
+                <div class="error-message">
+                    <h4>⚠️ Demo Mode Active</h4>
+                    <p>Showing simulated data for "${businessType}" businesses within ${radius} miles of ${location}. For real data, ensure your API configuration is correct.</p>
+                </div>
+            `);
+        }
+
+        function generateDemoData(location, businessType, radius, maxResults) {
+            // Create demo businesses based on search term
+            const searchTerm = businessType.toLowerCase();
+            let businessNames = [];
+            let categoryType = 'business';
+            
+            // Generate business names based on search term
+            if (searchTerm.includes('restaurant') || searchTerm.includes('food') || searchTerm.includes('dining')) {
+                businessNames = ['Corner Bistro', 'Family Kitchen', 'Downtown Grill', 'Pasta Palace', 'Burger Barn', 'Cozy Cafe', 'Pizza Corner', 'Taco Shop', 'Diner Deluxe', 'Steakhouse'];
+                categoryType = 'restaurant';
+            } else if (searchTerm.includes('auto') || searchTerm.includes('car') || searchTerm.includes('repair')) {
+                businessNames = ['Quick Fix Auto', 'Reliable Motors', 'Expert Auto Care', 'Main Street Garage', 'Pro Auto Service', 'Elite Auto', 'Fast Lane', 'Precision Motors', 'Auto Masters', 'Car Care Plus'];
+                categoryType = 'auto repair';
+            } else if (searchTerm.includes('salon') || searchTerm.includes('beauty') || searchTerm.includes('hair')) {
+                businessNames = ['Style Studio', 'Beauty Corner', 'Glamour Salon', 'Elegant Hair Design', 'Luxe Beauty Bar', 'Chic Cuts', 'Beauty Boutique', 'Hair Haven', 'Salon Supreme', 'Beauty Bliss'];
+                categoryType = 'beauty salon';
+            } else if (searchTerm.includes('dentist') || searchTerm.includes('dental')) {
+                businessNames = ['Smile Dental', 'Family Dentistry', 'Bright Teeth Clinic', 'Gentle Dental Care', 'Modern Dentistry', 'Premier Dental', 'Comfort Dental', 'Advanced Dentistry', 'Caring Dentists', 'Elite Dental'];
+                categoryType = 'dentist';
+            } else if (searchTerm.includes('lawyer') || searchTerm.includes('attorney') || searchTerm.includes('law')) {
+                businessNames = ['Smith & Associates', 'Legal Solutions', 'Justice Law Firm', 'Professional Legal', 'Expert Attorneys', 'Trusted Legal', 'Premier Law', 'Reliable Legal', 'Local Law Office', 'Legal Advocates'];
+                categoryType = 'lawyer';
+            } else if (searchTerm.includes('gym') || searchTerm.includes('fitness')) {
+                businessNames = ['FitLife Gym', 'Power Fitness', 'Elite Training', 'Muscle Factory', 'Wellness Center', 'Strong Fitness', 'Active Life Gym', 'Premier Fitness', 'Health Club', 'Fitness Plus'];
+                categoryType = 'gym';
+            } else {
+                // Generic business names for any other search term
+                businessNames = [`${businessType} Pro`, `Quality ${businessType}`, `Expert ${businessType}`, `Local ${businessType}`, `Premium ${businessType}`, `Trusted ${businessType}`, `Professional ${businessType}`, `Reliable ${businessType}`, `Elite ${businessType}`, `Premier ${businessType}`];
+                categoryType = businessType;
+            }
+
+            const businesses = [];
+
+            // Adjust number of businesses based on radius and maxResults
+            let businessCount = Math.min(maxResults, businessNames.length);
+            if (radius <= 5) {
+                businessCount = Math.min(businessCount, Math.floor(maxResults * 0.6));
+            } else if (radius <= 10) {
+                businessCount = Math.min(businessCount, Math.floor(maxResults * 0.8));
+            }
+
+            // Generate businesses with addresses that reflect the radius
+            for (let i = 0; i < businessCount; i++) {
+                const name = businessNames[i] || `${businessType} ${i + 1}`;
+                
+                const streetNumbers = Array.from({length: 15}, (_, idx) => 100 + idx * 50);
+                const streetNames = ['Main St', 'Oak Ave', 'Elm St', 'First St', 'Park Blvd', 'Center St', 'Market St', 'Broadway', 'Union Ave', 'Liberty St', 'Church St', 'Pine Ave', 'Cedar St', 'Maple Dr', 'Washington St'];
+                
+                const business = {
+                    name: name,
+                    address: `${streetNumbers[i % streetNumbers.length]} ${streetNames[i % streetNames.length]}, ${location}`,
+                    phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+                    email: generateEstimatedEmail(name),
+                    website: Math.random() > 0.6 ? null : `https://www.${name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '')}.com`,
+                    googleReviews: Math.floor(Math.random() * 50),
+                    rating: +(Math.random() * 2 + 3).toFixed(1),
+                    hasGoogleBusiness: Math.random() > 0.2,
+                    businessType: categoryType,
+                    placeId: `demo_place_${i}`,
+                    distance: +(Math.random() * radius).toFixed(1)
+                };
+
+                const opportunityData = calculateOpportunityScore(business);
+                businesses.push({ ...business, ...opportunityData });
+            }
+
+            return businesses.sort((a, b) => b.score - a.score);
+        }
+
+        // Generate inline business report (no modal)
+        function openBusinessReport(index) {
+            const business = window.currentBusinesses[index];
+            if (!business) return;
+            
+            // Scroll to top and show loading
+            window.scrollTo(0, 0);
+            
+            // Replace the entire results section with the report
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = `
+                <div style="margin-bottom: 30px;">
+                    <button onclick="goBackToResults()" style="background: #6b7280; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px;">
+                        ← Back to Search Results
+                    </button>
+                </div>
+                ${generateInlineBusinessReport(business)}
+            `;
+        }
+
+        // Go back to search results
+        function goBackToResults() {
+            displayResults(window.currentBusinesses);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.querySelector('.search-btn').disabled = show;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function showError(message) {
+            document.getElementById('results').innerHTML = `
+                <div class="error-message">
+                    <h4>❌ Error</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        function showInfo(message) {
+            document.getElementById('results').innerHTML = `
+                <div class="info-message">
+                    <h4>ℹ️ Information</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Initialize the application
+        window.onload = function() {
+            initializeLocationAutocomplete();
+        };
+
+        // Location autocomplete functionality
+        let locationTimeout = null;
+        let currentSuggestions = [];
+        let selectedSuggestionIndex = -1;
+
+        function initializeLocationAutocomplete() {
+            const locationInput = document.getElementById('location');
+            const suggestionsDiv = document.getElementById('location-suggestions');
+
+            locationInput.addEventListener('input', function() {
+                const query = this.value.trim();
+                
+                clearTimeout(locationTimeout);
+                
+                if (query.length < 2) {
+                    hideSuggestions();
+                    return;
+                }
+
+                // Debounce the API calls
+                locationTimeout = setTimeout(() => {
+                    fetchLocationSuggestions(query);
+                }, 300);
+            });
+
+            locationInput.addEventListener('keydown', function(e) {
+                const suggestionsDiv = document.getElementById('location-suggestions');
+                const suggestions = suggestionsDiv.querySelectorAll('.location-suggestion');
+                
+                if (suggestions.length === 0) return;
+
+                switch(e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, suggestions.length - 1);
+                        updateSuggestionHighlight();
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+                        updateSuggestionHighlight();
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (selectedSuggestionIndex >= 0) {
+                            selectSuggestion(currentSuggestions[selectedSuggestionIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        hideSuggestions();
+                        break;
+                }
+            });
+
+            // Hide suggestions when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!locationInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                    hideSuggestions();
+                }
+            });
+        }
+
+        async function fetchLocationSuggestions(query) {
+            try {
+                // Use a geocoding service for location suggestions
+                // This is a basic implementation - in production you'd want to use Google Places Autocomplete API
+                const suggestions = await getLocationSuggestions(query);
+                displaySuggestions(suggestions);
+            } catch (error) {
+                console.warn('Location suggestions failed:', error);
+                // Fallback to basic suggestions
+                displayBasicSuggestions(query);
+            }
+        }
+
+        async function getLocationSuggestions(query) {
+            try {
+                // Use OpenStreetMap Nominatim API for comprehensive location suggestions
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=us&q=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    throw new Error('Geocoding API failed');
+                }
+                
+                const data = await response.json();
+                
+                // Filter and format the results
+                const suggestions = data
+                    .filter(item => {
+                        // Only include cities, towns, villages, and administrative areas
+                        const validTypes = ['city', 'town', 'village', 'hamlet', 'suburb', 'neighbourhood', 'administrative'];
+                        const type = item.type || '';
+                        const category = item.category || '';
+                        const addressType = item.address?.city || item.address?.town || item.address?.village || '';
+                        
+                        return validTypes.some(validType => 
+                            type.includes(validType) || 
+                            category.includes(validType) || 
+                            addressType
+                        ) && item.address?.state;
+                    })
+                    .map(item => {
+                        const address = item.address || {};
+                        const city = address.city || address.town || address.village || address.hamlet || address.suburb || '';
+                        const state = address.state || '';
+                        const stateCode = getStateCode(state);
+                        
+                        return {
+                            description: `${city}, ${stateCode}`,
+                            place_id: `${city.toLowerCase()}_${stateCode.toLowerCase()}`,
+                            structured_formatting: {
+                                main_text: city,
+                                secondary_text: `${stateCode}, USA`
+                            },
+                            geometry: {
+                                lat: parseFloat(item.lat),
+                                lng: parseFloat(item.lon)
+                            }
+                        };
+                    })
+                    .filter(item => item.structured_formatting.main_text && item.structured_formatting.secondary_text !== ', USA')
+                    // Remove duplicates
+                    .filter((item, index, arr) => 
+                        arr.findIndex(other => other.description === item.description) === index
+                    )
+                    .slice(0, 8);
+
+                return suggestions;
+                
+            } catch (error) {
+                console.warn('Geocoding API failed, using fallback:', error);
+                return getFallbackSuggestions(query);
+            }
+        }
+
+        function getStateCode(stateName) {
+            const stateMap = {
+                'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+                'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+                'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+                'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+                'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS',
+                'Missouri': 'MO', 'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH',
+                'New Jersey': 'NJ', 'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC',
+                'North Dakota': 'ND', 'Ohio': 'OH', 'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA',
+                'Rhode Island': 'RI', 'South Carolina': 'SC', 'South Dakota': 'SD', 'Tennessee': 'TN',
+                'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT', 'Virginia': 'VA', 'Washington': 'WA',
+                'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY', 'District of Columbia': 'DC'
+            };
+            
+            return stateMap[stateName] || stateName;
+        }
+
+        function getFallbackSuggestions(query) {
+            // Enhanced fallback with more comprehensive city database
+            const majorCities = [
+                { city: 'Austin', state: 'TX' }, { city: 'Dallas', state: 'TX' }, { city: 'Houston', state: 'TX' },
+                { city: 'San Antonio', state: 'TX' }, { city: 'Fort Worth', state: 'TX' }, { city: 'El Paso', state: 'TX' },
+                { city: 'Phoenix', state: 'AZ' }, { city: 'Tucson', state: 'AZ' }, { city: 'Mesa', state: 'AZ' },
+                { city: 'Los Angeles', state: 'CA' }, { city: 'San Diego', state: 'CA' }, { city: 'San Francisco', state: 'CA' },
+                { city: 'San Jose', state: 'CA' }, { city: 'Sacramento', state: 'CA' }, { city: 'Oakland', state: 'CA' },
+                { city: 'Fresno', state: 'CA' }, { city: 'Long Beach', state: 'CA' }, { city: 'Anaheim', state: 'CA' },
+                { city: 'Chicago', state: 'IL' }, { city: 'Aurora', state: 'IL' }, { city: 'Rockford', state: 'IL' },
+                { city: 'New York', state: 'NY' }, { city: 'Buffalo', state: 'NY' }, { city: 'Rochester', state: 'NY' },
+                { city: 'Syracuse', state: 'NY' }, { city: 'Albany', state: 'NY' }, { city: 'Yonkers', state: 'NY' },
+                { city: 'Miami', state: 'FL' }, { city: 'Tampa', state: 'FL' }, { city: 'Orlando', state: 'FL' },
+                { city: 'Jacksonville', state: 'FL' }, { city: 'St. Petersburg', state: 'FL' }, { city: 'Tallahassee', state: 'FL' },
+                { city: 'Atlanta', state: 'GA' }, { city: 'Columbus', state: 'GA' }, { city: 'Augusta', state: 'GA' },
+                { city: 'Savannah', state: 'GA' }, { city: 'Athens', state: 'GA' }, { city: 'Macon', state: 'GA' },
+                { city: 'Las Vegas', state: 'NV' }, { city: 'Henderson', state: 'NV' }, { city: 'Reno', state: 'NV' },
+                { city: 'Seattle', state: 'WA' }, { city: 'Spokane', state: 'WA' }, { city: 'Tacoma', state: 'WA' },
+                { city: 'Vancouver', state: 'WA' }, { city: 'Bellevue', state: 'WA' }, { city: 'Kent', state: 'WA' },
+                { city: 'Portland', state: 'OR' }, { city: 'Eugene', state: 'OR' }, { city: 'Salem', state: 'OR' },
+                { city: 'Denver', state: 'CO' }, { city: 'Colorado Springs', state: 'CO' }, { city: 'Aurora', state: 'CO' },
+                { city: 'Nashville', state: 'TN' }, { city: 'Memphis', state: 'TN' }, { city: 'Knoxville', state: 'TN' },
+                { city: 'Charlotte', state: 'NC' }, { city: 'Raleigh', state: 'NC' }, { city: 'Greensboro', state: 'NC' },
+                { city: 'Durham', state: 'NC' }, { city: 'Winston-Salem', state: 'NC' }, { city: 'Fayetteville', state: 'NC' },
+                { city: 'Boston', state: 'MA' }, { city: 'Worcester', state: 'MA' }, { city: 'Springfield', state: 'MA' },
+                { city: 'Philadelphia', state: 'PA' }, { city: 'Pittsburgh', state: 'PA' }, { city: 'Allentown', state: 'PA' },
+                { city: 'Baltimore', state: 'MD' }, { city: 'Frederick', state: 'MD' }, { city: 'Rockville', state: 'MD' },
+                { city: 'Washington', state: 'DC' }, { city: 'Richmond', state: 'VA' }, { city: 'Virginia Beach', state: 'VA' },
+                { city: 'Norfolk', state: 'VA' }, { city: 'Chesapeake', state: 'VA' }, { city: 'Newport News', state: 'VA' },
+                { city: 'Kansas City', state: 'MO' }, { city: 'St. Louis', state: 'MO' }, { city: 'Springfield', state: 'MO' },
+                { city: 'Minneapolis', state: 'MN' }, { city: 'St. Paul', state: 'MN' }, { city: 'Rochester', state: 'MN' },
+                { city: 'Milwaukee', state: 'WI' }, { city: 'Madison', state: 'WI' }, { city: 'Green Bay', state: 'WI' },
+                { city: 'Cleveland', state: 'OH' }, { city: 'Columbus', state: 'OH' }, { city: 'Cincinnati', state: 'OH' },
+                { city: 'Toledo', state: 'OH' }, { city: 'Akron', state: 'OH' }, { city: 'Dayton', state: 'OH' },
+                { city: 'Indianapolis', state: 'IN' }, { city: 'Fort Wayne', state: 'IN' }, { city: 'Evansville', state: 'IN' },
+                { city: 'Detroit', state: 'MI' }, { city: 'Grand Rapids', state: 'MI' }, { city: 'Warren', state: 'MI' },
+                { city: 'New Orleans', state: 'LA' }, { city: 'Baton Rouge', state: 'LA' }, { city: 'Shreveport', state: 'LA' },
+                { city: 'Oklahoma City', state: 'OK' }, { city: 'Tulsa', state: 'OK' }, { city: 'Norman', state: 'OK' },
+                { city: 'Little Rock', state: 'AR' }, { city: 'Fayetteville', state: 'AR' }, { city: 'Fort Smith', state: 'AR' },
+                { city: 'Louisville', state: 'KY' }, { city: 'Lexington', state: 'KY' }, { city: 'Bowling Green', state: 'KY' },
+                { city: 'Birmingham', state: 'AL' }, { city: 'Montgomery', state: 'AL' }, { city: 'Mobile', state: 'AL' },
+                { city: 'Huntsville', state: 'AL' }, { city: 'Tuscaloosa', state: 'AL' }, { city: 'Hoover', state: 'AL' },
+                { city: 'Jackson', state: 'MS' }, { city: 'Gulfport', state: 'MS' }, { city: 'Southaven', state: 'MS' },
+                { city: 'Albuquerque', state: 'NM' }, { city: 'Las Cruces', state: 'NM' }, { city: 'Rio Rancho', state: 'NM' },
+                { city: 'Salt Lake City', state: 'UT' }, { city: 'West Valley City', state: 'UT' }, { city: 'Provo', state: 'UT' },
+                { city: 'Boise', state: 'ID' }, { city: 'Meridian', state: 'ID' }, { city: 'Nampa', state: 'ID' },
+                { city: 'Charleston', state: 'SC' }, { city: 'Columbia', state: 'SC' }, { city: 'North Charleston', state: 'SC' },
+                { city: 'Des Moines', state: 'IA' }, { city: 'Cedar Rapids', state: 'IA' }, { city: 'Davenport', state: 'IA' },
+                { city: 'Omaha', state: 'NE' }, { city: 'Lincoln', state: 'NE' }, { city: 'Bellevue', state: 'NE' },
+                { city: 'Wichita', state: 'KS' }, { city: 'Overland Park', state: 'KS' }, { city: 'Kansas City', state: 'KS' },
+                { city: 'Billings', state: 'MT' }, { city: 'Missoula', state: 'MT' }, { city: 'Great Falls', state: 'MT' },
+                { city: 'Fargo', state: 'ND' }, { city: 'Bismarck', state: 'ND' }, { city: 'Grand Forks', state: 'ND' },
+                { city: 'Sioux Falls', state: 'SD' }, { city: 'Rapid City', state: 'SD' }, { city: 'Aberdeen', state: 'SD' },
+                { city: 'Cheyenne', state: 'WY' }, { city: 'Casper', state: 'WY' }, { city: 'Laramie', state: 'WY' },
+                { city: 'Burlington', state: 'VT' }, { city: 'Essex', state: 'VT' }, { city: 'South Burlington', state: 'VT' },
+                { city: 'Manchester', state: 'NH' }, { city: 'Nashua', state: 'NH' }, { city: 'Concord', state: 'NH' },
+                { city: 'Portland', state: 'ME' }, { city: 'Lewiston', state: 'ME' }, { city: 'Bangor', state: 'ME' },
+                { city: 'Bridgeport', state: 'CT' }, { city: 'New Haven', state: 'CT' }, { city: 'Hartford', state: 'CT' },
+                { city: 'Newark', state: 'NJ' }, { city: 'Jersey City', state: 'NJ' }, { city: 'Paterson', state: 'NJ' },
+                { city: 'Wilmington', state: 'DE' }, { city: 'Dover', state: 'DE' }, { city: 'Newark', state: 'DE' },
+                { city: 'Providence', state: 'RI' }, { city: 'Warwick', state: 'RI' }, { city: 'Cranston', state: 'RI' },
+                { city: 'Honolulu', state: 'HI' }, { city: 'Pearl City', state: 'HI' }, { city: 'Hilo', state: 'HI' },
+                { city: 'Anchorage', state: 'AK' }, { city: 'Fairbanks', state: 'AK' }, { city: 'Juneau', state: 'AK' }
+            ];
+
+            const filtered = majorCities.filter(location => 
+                location.city.toLowerCase().includes(query.toLowerCase()) ||
+                location.state.toLowerCase().includes(query.toLowerCase()) ||
+                `${location.city}, ${location.state}`.toLowerCase().includes(query.toLowerCase())
+            ).slice(0, 8);
+
+            return filtered.map(location => ({
+                description: `${location.city}, ${location.state}`,
+                place_id: `${location.city.toLowerCase()}_${location.state.toLowerCase()}`,
+                structured_formatting: {
+                    main_text: location.city,
+                    secondary_text: location.state + ', USA'
+                }
+            }));
+        }
+
+        function displaySuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('location-suggestions');
+            currentSuggestions = suggestions;
+            selectedSuggestionIndex = -1;
+
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+
+            suggestionsDiv.innerHTML = '';
+            
+            suggestions.forEach((suggestion, index) => {
+                const suggestionElement = document.createElement('div');
+                suggestionElement.className = 'location-suggestion';
+                suggestionElement.innerHTML = `
+                    <div class="main-text">${suggestion.structured_formatting.main_text}</div>
+                    <div class="secondary-text">${suggestion.structured_formatting.secondary_text}</div>
+                `;
+                
+                suggestionElement.addEventListener('click', () => {
+                    selectSuggestion(suggestion);
+                });
+
+                suggestionsDiv.appendChild(suggestionElement);
+            });
+
+            suggestionsDiv.style.display = 'block';
+        }
+
+        function updateSuggestionHighlight() {
+            const suggestions = document.querySelectorAll('.location-suggestion');
+            suggestions.forEach((suggestion, index) => {
+                suggestion.classList.toggle('highlighted', index === selectedSuggestionIndex);
+            });
+        }
+
+        function selectSuggestion(suggestion) {
+            document.getElementById('location').value = suggestion.description;
+            hideSuggestions();
+            // Store the place_id for more accurate searches
+            document.getElementById('location').setAttribute('data-place-id', suggestion.place_id);
+        }
+
+        function hideSuggestions() {
+            document.getElementById('location-suggestions').style.display = 'none';
+            selectedSuggestionIndex = -1;
+            currentSuggestions = [];
+        }
+
+        // Generate comprehensive inline business report
+        function generateInlineBusinessReport(business) {
+            const opportunity = getOpportunityLevel(business.score);
+            const issues = analyzeBusinessIssues(business);
+            const solutions = generateSolutions(business);
+            const costEstimate = calculateProjectCost(business);
+            
+            return `
+                <!-- Report Header -->
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 16px; margin-bottom: 40px; text-align: center;">
+                    <h1 style="margin: 0; font-size: 2.5rem; font-weight: 800;">${business.name}</h1>
+                    <div style="font-size: 1.2rem; opacity: 0.9; margin-top: 10px;">Business Intelligence Report</div>
+                    <div style="font-size: 1rem; opacity: 0.8; margin-top: 15px;">Generated on ${new Date().toLocaleDateString()} • Report ID: BIR-${Date.now()}</div>
+                </div>
+
+                <!-- Executive Summary -->
+                <div style="margin-bottom: 50px; padding: 40px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 16px; border-left: 8px solid #667eea;">
+                    <h2 style="color: #1f2937; margin-bottom: 30px; font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 15px;">
+                        <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📊</span>
+                        Executive Summary
+                    </h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-bottom: 30px;">
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 4px solid #667eea;">
+                            <div style="font-size: 3rem; font-weight: 800; color: #667eea; margin-bottom: 10px;">${business.score}</div>
+                            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Opportunity Score</div>
+                        </div>
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 4px solid #10b981;">
+                            <div style="font-size: 3rem; font-weight: 800; color: #10b981; margin-bottom: 10px;">${business.rating || 'N/A'}</div>
+                            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Current Rating</div>
+                        </div>
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 4px solid #f59e0b;">
+                            <div style="font-size: 3rem; font-weight: 800; color: #f59e0b; margin-bottom: 10px;">${business.googleReviews}</div>
+                            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Google Reviews</div>
+                        </div>
+                        <div style="text-align: center; padding: 30px; background: white; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border-top: 4px solid #ef4444;">
+                            <div style="font-size: 3rem; font-weight: 800; color: #ef4444; margin-bottom: 10px;">${opportunity.level}</div>
+                            <div style="color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Priority Level</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px;">
+                        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 1.3rem;">Business Overview</h3>
+                            <p style="margin-bottom: 10px;"><strong>Industry:</strong> ${business.businessType.charAt(0).toUpperCase() + business.businessType.slice(1)}</p>
+                            <p style="margin-bottom: 10px;"><strong>Digital Rating:</strong> ${business.rating || 'No rating'}⭐ (${business.googleReviews} reviews)</p>
+                            <p style="margin-bottom: 0;"><strong>Website:</strong> ${business.website ? `<a href="${business.website}" target="_blank" style="color: #667eea;">Active</a>` : '<span style="color: #ef4444;">None</span>'}</p>
+                        </div>
+                        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+                            <h3 style="color: #1f2937; margin-bottom: 15px; font-size: 1.3rem;">Opportunity Assessment</h3>
+                            <div style="padding: 15px; border-radius: 8px; background: ${opportunity.class === 'high-opportunity' ? '#d1fae5' : opportunity.class === 'medium-opportunity' ? '#fef3c7' : '#fee2e2'}; border-left: 4px solid ${opportunity.class === 'high-opportunity' ? '#10b981' : opportunity.class === 'medium-opportunity' ? '#f59e0b' : '#ef4444'};">
+                                <strong style="color: ${opportunity.class === 'high-opportunity' ? '#065f46' : opportunity.class === 'medium-opportunity' ? '#92400e' : '#991b1b'};">${opportunity.level} Priority Opportunity</strong>
+                                <p style="margin: 5px 0 0 0; font-size: 0.9rem; color: #374151;">Score: ${business.score}/100 points</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Critical Issues -->
+                <div style="margin-bottom: 50px; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 8px solid #ef4444;">
+                    <h2 style="color: #1f2937; margin-bottom: 30px; font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 15px;">
+                        <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">⚠️</span>
+                        Critical Issues Identified
+                    </h2>
+                    
+                    ${issues.map((issue, index) => `
+                        <div style="background: #fef2f2; padding: 30px; margin-bottom: 20px; border-radius: 12px; border-left: 6px solid #ef4444; transition: all 0.3s ease;">
+                            <div style="display: inline-block; padding: 8px 16px; border-radius: 15px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; background: ${issue.priority === 'high' ? '#fecaca' : issue.priority === 'medium' ? '#fed7aa' : '#c7d2fe'}; color: ${issue.priority === 'high' ? '#dc2626' : issue.priority === 'medium' ? '#d97706' : '#4f46e5'};">
+                                ${issue.priority.toUpperCase()} PRIORITY
+                            </div>
+                            <h3 style="margin-bottom: 15px; color: #dc2626; font-size: 1.4rem; font-weight: 700;">Issue ${index + 1}: ${issue.title}</h3>
+                            <p style="margin-bottom: 15px; font-size: 1.1rem; line-height: 1.6; color: #374151;">${issue.description}</p>
+                            <div style="background: #fee2e2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                                <strong style="color: #991b1b;">Business Impact:</strong> <em style="color: #7f1d1d;">${issue.impact}</em>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Strategic Solutions -->
+                <div style="margin-bottom: 50px; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 8px solid #10b981;">
+                    <h2 style="color: #1f2937; margin-bottom: 30px; font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 15px;">
+                        <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💡</span>
+                        Strategic Solutions & Recommendations
+                    </h2>
+                    
+                    ${solutions.map((solution, index) => `
+                        <div style="background: #f0fdf4; padding: 30px; margin-bottom: 20px; border-radius: 12px; border-left: 6px solid #10b981; transition: all 0.3s ease;">
+                            <h3 style="margin-bottom: 15px; color: #059669; font-size: 1.4rem; font-weight: 700;">Solution ${index + 1}: ${solution.title}</h3>
+                            <p style="margin-bottom: 15px; font-size: 1.1rem; line-height: 1.6; color: #374151;">${solution.description}</p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                                <div style="background: #dcfce7; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                                    <strong style="color: #065f46;">Expected Outcome:</strong><br>
+                                    <em style="color: #166534;">${solution.outcome}</em>
+                                </div>
+                                <div style="background: #e0f2fe; padding: 15px; border-radius: 8px; border-left: 4px solid #0ea5e9;">
+                                    <strong style="color: #0c4a6e;">Timeline:</strong><br>
+                                    <em style="color: #075985;">${solution.timeline}</em>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Investment Analysis -->
+                <div style="margin-bottom: 50px; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 8px solid #3b82f6;">
+                    <h2 style="color: #1f2937; margin-bottom: 30px; font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 15px;">
+                        <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💰</span>
+                        Investment Analysis & ROI Projection
+                    </h2>
+                    
+                    <div style="background: linear-gradient(135deg, #dbeafe, #bfdbfe); padding: 40px; border-radius: 16px; margin-top: 30px; border: 2px solid #93c5fd;">
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="font-size: 3rem; font-weight: 800; background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 10px;">${costEstimate.range}</div>
+                            <div style="font-size: 1.2rem; color: #1e40af; font-weight: 600;">Total Investment Range</div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px;">
+                            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <h3 style="color: #1976d2; margin-bottom: 20px; font-size: 1.4rem;">Project Breakdown:</h3>
+                                <ul style="padding-left: 0; list-style: none;">
+                                    ${costEstimate.breakdown.map(item => `
+                                        <li style="margin-bottom: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                                            ${item}
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                                <h3 style="color: #1976d2; margin-bottom: 20px; font-size: 1.4rem;">ROI Analysis:</h3>
+                                <div style="background: #e8f5e8; padding: 25px; border-radius: 12px; border: 2px solid #10b981; text-align: center;">
+                                    <div style="font-size: 1.8rem; font-weight: 700; color: #059669; margin-bottom: 10px;">300-500% ROI</div>
+                                    <p style="margin: 0; color: #065f46; font-weight: 600;">${costEstimate.roi}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Next Steps -->
+                <div style="margin-bottom: 50px; padding: 40px; background: white; border-radius: 16px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 8px solid #06b6d4;">
+                    <h2 style="color: #1f2937; margin-bottom: 30px; font-size: 2rem; font-weight: 700; display: flex; align-items: center; gap: 15px;">
+                        <span style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📞</span>
+                        Contact Information & Next Steps
+                    </h2>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                        <div>
+                            <h3 style="color: #1f2937; margin-bottom: 20px; font-size: 1.4rem;">Business Contact Details:</h3>
+                            <div style="background: #f8fafc; padding: 30px; border-radius: 12px; border: 2px solid #e2e8f0;">
+                                <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #06b6d4;">
+                                    <strong style="color: #0c4a6e;">📞 Phone:</strong><br>
+                                    <a href="tel:${business.phone}" style="color: #0891b2; font-size: 1.1rem; text-decoration: none;">${business.phone}</a>
+                                </div>
+                                <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #06b6d4;">
+                                    <strong style="color: #0c4a6e;">✉️ Email:</strong><br>
+                                    <a href="mailto:${business.email}" style="color: #0891b2; font-size: 1.1rem; text-decoration: none;">${business.email}</a>
+                                </div>
+                                <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #06b6d4;">
+                                    <strong style="color: #0c4a6e;">📍 Address:</strong><br>
+                                    <span style="color: #374151; font-size: 1.1rem;">${business.address}</span>
+                                </div>
+                                ${business.website ? `
+                                    <div style="padding: 15px; background: white; border-radius: 8px; border-left: 4px solid #06b6d4;">
+                                        <strong style="color: #0c4a6e;">🌐 Website:</strong><br>
+                                        <a href="${business.website}" target="_blank" style="color: #0891b2; font-size: 1.1rem; text-decoration: none;">${business.website}</a>
+                                    </div>
+                                ` : `
+                                    <div style="padding: 15px; background: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+                                        <strong style="color: #991b1b;">⚠️ Website:</strong><br>
+                                        <span style="color: #7f1d1d; font-style: italic;">No website found</span>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                        <div>
+                            <h3 style="color: #1f2937; margin-bottom: 20px; font-size: 1.4rem;">Recommended Actions:</h3>
+                            <div style="background: #f8fafc; padding: 30px; border-radius: 12px; border: 2px solid #e2e8f0;">
+                                <div style="counter-reset: step-counter;">
+                                    <div style="counter-increment: step-counter; margin-bottom: 15px; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #10b981; position: relative;">
+                                        <div style="position: absolute; left: -12px; top: 20px; width: 24px; height: 24px; background: #10b981; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">1</div>
+                                        <div style="margin-left: 20px; color: #374151;">Schedule initial consultation call</div>
+                                    </div>
+                                    <div style="counter-increment: step-counter; margin-bottom: 15px; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #3b82f6; position: relative;">
+                                        <div style="position: absolute; left: -12px; top: 20px; width: 24px; height: 24px; background: #3b82f6; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">2</div>
+                                        <div style="margin-left: 20px; color: #374151;">Present this comprehensive analysis</div>
+                                    </div>
+                                    <div style="counter-increment: step-counter; margin-bottom: 15px; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #f59e0b; position: relative;">
+                                        <div style="position: absolute; left: -12px; top: 20px; width: 24px; height: 24px; background: #f59e0b; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">3</div>
+                                        <div style="margin-left: 20px; color: #374151;">Demonstrate competitor comparisons</div>
+                                    </div>
+                                    <div style="counter-increment: step-counter; margin-bottom: 15px; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #8b5cf6; position: relative;">
+                                        <div style="position: absolute; left: -12px; top: 20px; width: 24px; height: 24px; background: #8b5cf6; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">4</div>
+                                        <div style="margin-left: 20px; color: #374151;">Propose customized solution package</div>
+                                    </div>
+                                    <div style="counter-increment: step-counter; padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #ef4444; position: relative;">
+                                        <div style="position: absolute; left: -12px; top: 20px; width: 24px; height: 24px; background: #ef4444; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;">5</div>
+                                        <div style="margin-left: 20px; color: #374151;">Sign service agreement and begin Phase 1</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="margin-bottom: 50px; text-align: center;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; max-width: 800px; margin: 0 auto;">
+                        <button onclick="downloadReport('${business.name}')" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            📄 Download Report
+                        </button>
+                        <button onclick="window.print()" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #fdbb2d 0%, #22c1c3 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            🖨️ Print Report
+                        </button>
+                        <button onclick="generatePDF('${business.name}')" style="padding: 20px 30px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 1rem; transition: all 0.3s ease; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); color: white; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            📋 Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Report Footer -->
+                <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 12px; border-top: 3px solid #667eea;">
+                    <div style="color: #6b7280; font-size: 0.9rem;">
+                        Report Generated by Business Intelligence Pro Platform<br>
+                        For internal use only • Contains confidential business analysis<br>
+                        Report ID: BIR-${Date.now()} • Generated: ${new Date().toLocaleString()}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Analyze business issues
+        function analyzeBusinessIssues(business) {
+            const issues = [];
+            
+            if (!business.website) {
+                issues.push({
+                    priority: 'high',
+                    title: 'No Professional Website',
+                    description: 'The business lacks a professional website, missing out on 75% of potential customers who research online before visiting.',
+                    impact: 'Lost customers, reduced credibility, poor search visibility'
+                });
+            }
+            
+            if (business.googleReviews < 10) {
+                issues.push({
+                    priority: 'high',
+                    title: 'Insufficient Online Reviews',
+                    description: `Only ${business.googleReviews} Google reviews. Businesses with 25+ reviews get 25% more customers.`,
+                    impact: 'Lower trust, poor search ranking, lost business to competitors'
+                });
+            }
+            
+            if (business.rating === 0) {
+                issues.push({
+                    priority: 'medium',
+                    title: 'No Customer Rating',
+                    description: 'Business has no customer rating visible on Google, which impacts local search ranking.',
+                    impact: 'Poor visibility in local search results, reduced customer trust'
+                });
+            } else if (business.rating < 4.0) {
+                issues.push({
+                    priority: 'medium',
+                    title: 'Low Customer Rating',
+                    description: `Current rating of ${business.rating}★ is below the 4.0+ threshold most customers expect.`,
+                    impact: 'Reduced customer trust, lower search ranking, competitive disadvantage'
+                });
+            }
+            
+            if (business.phone === 'Phone not available') {
+                issues.push({
+                    priority: 'low',
+                    title: 'Missing Contact Information',
+                    description: 'No phone number listed in Google Business Profile makes it hard for customers to contact.',
+                    impact: 'Missed customer inquiries, reduced accessibility'
+                });
+            }
+            
+            return issues;
+        }
+
+        // Generate solutions
+        function generateSolutions(business) {
+            const solutions = [];
+            
+            if (!business.website) {
+                solutions.push({
+                    title: 'Professional Website Development',
+                    description: 'Create a modern, mobile-responsive website with clear calls-to-action, service descriptions, and contact information.',
+                    outcome: 'Increased online visibility, better customer experience, higher conversion rates',
+                    timeline: '2-3 weeks'
+                });
+            }
+            
+            if (business.googleReviews < 25) {
+                solutions.push({
+                    title: 'Review Generation Strategy',
+                    description: 'Implement automated review request system and provide excellent customer service training.',
+                    outcome: 'Increase review count by 200-300% within 3 months, improve average rating',
+                    timeline: '2-4 weeks setup + ongoing'
+                });
+            }
+            
+            solutions.push({
+                title: 'Google Business Profile Optimization',
+                description: 'Fully optimize Google Business Profile with photos, hours, services, posts, and regular updates.',
+                outcome: 'Improved local search visibility, higher Google ranking, more customer engagement',
+                timeline: '1 week'
+            });
+            
+            solutions.push({
+                title: 'Local SEO Optimization',
+                description: 'Optimize for local search terms, build local citations, and create location-specific content.',
+                outcome: 'Higher search rankings, increased organic traffic, more local customers',
+                timeline: '3-4 weeks'
+            });
+            
+            return solutions;
+        }
+
+        // Calculate project cost
+        function calculateProjectCost(business) {
+            let baseCost = 1500;
+            let breakdown = [];
+            
+            if (!business.website) {
+                baseCost += 2500;
+                breakdown.push('Professional Website Development: $2,500');
+            }
+            
+            if (business.googleReviews < 10) {
+                baseCost += 800;
+                breakdown.push('Review Management System: $800');
+            }
+            
+            baseCost += 500;
+            breakdown.push('Google Business Optimization: $500');
+            
+            baseCost += 1000;
+            breakdown.push('Local SEO Optimization: $1,000');
+            
+            breakdown.push('Project Management & Strategy: $500');
+            
+            const highEnd = Math.round(baseCost * 1.3);
+            
+            return {
+                range: `$${baseCost.toLocaleString()} - $${highEnd.toLocaleString()}`,
+                breakdown: breakdown,
+                roi: 'Expected 300-500% ROI within 12 months through increased customer acquisition'
+            };
+        }
+
+        // Download report functions
+        function downloadReport(businessName) {
+            const reportContent = document.getElementById('results').innerHTML;
+            const blob = new Blob([`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Business Report - ${businessName}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                        .report-header { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                        .metric-card { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #667eea; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    ${reportContent}
+                </body>
+                </html>
+            `], { type: 'text/html' });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Business-Report-${businessName.replace(/[^a-z0-9]/gi, '-')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function generatePDF(businessName) {
+            const backButton = document.querySelector('button[onclick="goBackToResults()"]');
+            if (backButton) backButton.style.display = 'none';
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: #4f46e5; color: white; padding: 15px 25px; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                    💡 Use Ctrl+P (Cmd+P on Mac) and select "Save as PDF" to export this report
+                </div>
+            `;
+            document.body.appendChild(tempDiv);
+            
+            setTimeout(() => {
+                document.body.removeChild(tempDiv);
+                if (backButton) backButton.style.display = 'block';
+            }, 5000);
+            
+            window.print();
+        }
+    </script>
+</body>
+</html>

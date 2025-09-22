@@ -1,0 +1,26 @@
+{
+  "name": "business-intelligence-tool",
+  "version": "1.0.0",
+  "description": "Local business web scraping tool for finding revenue opportunities",
+  "main": "index.html",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build step required'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "business-intelligence",
+    "lead-generation",
+    "google-places",
+    "local-businesses"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}

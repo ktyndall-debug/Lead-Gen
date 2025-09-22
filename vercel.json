@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/search-places.js": {
+      "maxDuration": 30
+    },
+    "api/place-details.js": {
+      "maxDuration": 15
+    }
+  }
+}
