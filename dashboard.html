@@ -801,30 +801,49 @@
             document.getElementById('searchButton').disabled = true;
             
             try {
-                // Simulate API call (replace with actual API)
-                await simulateSearch(location, businessType, radius, maxResults);
+                // Make real API call to search businesses
+                await searchBusinesses(location, businessType, radius, maxResults);
             } catch (error) {
                 console.error('Search error:', error);
-                alert('Search failed. Please try again.');
+                alert('Search failed: ' + error.message);
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('searchButton').disabled = false;
             }
         });
 
-        async function simulateSearch(location, businessType, radius, maxResults) {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 2000));
+        async function searchBusinesses(location, businessType, radius, maxResults) {
+            const response = await fetch('/api/search/businesses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include', // Include cookies for authentication
+                body: JSON.stringify({
+                    location: location,
+                    businessType: businessType,
+                    radius: parseInt(radius),
+                    maxResults: parseInt(maxResults)
+                })
+            });
             
-            // Generate mock results
-            const mockBusinesses = generateMockBusinesses(parseInt(maxResults));
-            displayResults(mockBusinesses);
+            const data = await response.json();
             
-            // Update user stats
-            const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
-            stats.searches = (stats.searches || 0) + 1;
-            localStorage.setItem('userStats', JSON.stringify(stats));
-            updateStats();
+            if (!response.ok) {
+                throw new Error(data.error || 'Search failed');
+            }
+            
+            if (data.success && data.results) {
+                displayResults(data.results);
+                
+                // Update user stats
+                const stats = JSON.parse(localStorage.getItem('userStats') || '{}');
+                stats.searches = (stats.searches || 0) + 1;
+                localStorage.setItem('userStats', JSON.stringify(stats));
+                updateStats();
+            } else {
+                throw new Error('No results found');
+            }
         }
 
         function generateMockBusinesses(count) {
