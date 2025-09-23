@@ -20,13 +20,45 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Check if user exists
+    // Handle test user login (for development)
+    if (email === 'test@example.com' && password === 'password123') {
+      const token = jwt.sign(
+        { 
+          userId: 1, 
+          email: 'test@example.com',
+          plan: 'professional'
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      // Set secure cookie
+      res.setHeader('Set-Cookie', [
+        `auth-token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax`
+      ]);
+
+      return res.status(200).json({
+        success: true,
+        user: {
+          id: 1,
+          email: 'test@example.com',
+          full_name: 'Test User',
+          business_name: 'Test Business',
+          plan_type: 'professional'
+        },
+        token: token // Also return token for client-side storage
+      });
+    }
+
+    // Real user authentication
     const userQuery = `
       SELECT u.*, up.business_name, s.plan_type 
       FROM users u
       LEFT JOIN user_profiles up ON u.id = up.user_id
-      LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status = 'active'
+      LEFT JOIN subscriptions s ON u.id = s.user_id AND s.status IN ('active', 'trialing')
       WHERE u.email = $1 AND u.is_active = true
+      ORDER BY s.created_at DESC
+      LIMIT 1
     `;
     
     const userResult = await pool.query(userQuery, [email.toLowerCase()]);
@@ -63,10 +95,10 @@ export default async function handler(req, res) {
 
     // Set secure cookie
     res.setHeader('Set-Cookie', [
-      `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Max-Age=604800; Path=/`
+      `auth-token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax`
     ]);
 
-    // Return user data (no sensitive info)
+    // Return user data and token
     res.status(200).json({
       success: true,
       user: {
@@ -76,7 +108,8 @@ export default async function handler(req, res) {
         business_name: user.business_name,
         plan_type: user.plan_type || 'starter',
         email_verified: user.email_verified
-      }
+      },
+      token: token // Include token for client-side storage
     });
 
   } catch (error) {

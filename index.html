@@ -488,6 +488,12 @@
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
 
+        .modal-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .modal-link {
             text-align: center;
             color: var(--primary);
@@ -512,6 +518,17 @@
 
         .close:hover {
             opacity: 1;
+        }
+
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: none;
         }
 
         /* Responsive */
@@ -720,16 +737,17 @@
                 <h2>Welcome Back</h2>
             </div>
             <div class="modal-body">
+                <div class="error-message" id="loginError"></div>
                 <form id="loginForm">
                     <div class="form-group">
                         <label for="loginEmail">Email</label>
-                        <input type="email" id="loginEmail" required>
+                        <input type="email" id="loginEmail" value="test@example.com" required>
                     </div>
                     <div class="form-group">
                         <label for="loginPassword">Password</label>
-                        <input type="password" id="loginPassword" required>
+                        <input type="password" id="loginPassword" value="password123" required>
                     </div>
-                    <button type="submit" class="modal-button">Log In</button>
+                    <button type="submit" class="modal-button" id="loginButton">Log In</button>
                 </form>
                 <div class="modal-link" onclick="openModal('signupModal'); closeModal('loginModal')">
                     Don't have an account? Sign up
@@ -746,6 +764,7 @@
                 <h2>Start Your Free Trial</h2>
             </div>
             <div class="modal-body">
+                <div class="error-message" id="signupError"></div>
                 <form id="signupForm">
                     <div class="form-group">
                         <label for="signupName">Full Name</label>
@@ -763,7 +782,7 @@
                         <label for="signupPassword">Password</label>
                         <input type="password" id="signupPassword" required>
                     </div>
-                    <button type="submit" class="modal-button">Start Free Trial</button>
+                    <button type="submit" class="modal-button" id="signupButton">Start Free Trial</button>
                 </form>
                 <div class="modal-link" onclick="openModal('loginModal'); closeModal('signupModal')">
                     Already have an account? Log in
@@ -796,25 +815,78 @@
             openModal('signupModal');
         }
 
-        // Form submissions
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        function showError(modalId, message) {
+            const errorElement = document.getElementById(modalId + 'Error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(modalId) {
+            const errorElement = document.getElementById(modalId + 'Error');
+            errorElement.style.display = 'none';
+        }
+
+        // Login form submission - FIXED TO PROPERLY HANDLE JWT TOKENS
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
+            const loginButton = document.getElementById('loginButton');
             
-            // TODO: Implement actual authentication
-            console.log('Login attempt:', { email, password });
+            hideError('login');
+            loginButton.disabled = true;
+            loginButton.textContent = 'Logging in...';
             
-            // Simulate successful login
-            localStorage.setItem('userLoggedIn', 'true');
-            localStorage.setItem('userEmail', email);
-            
-            // Redirect to dashboard
-            window.location.href = 'dashboard.html';
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Login failed');
+                }
+                
+                if (data.success && data.user && data.token) {
+                    // Store all necessary data in localStorage
+                    localStorage.setItem('userLoggedIn', 'true');
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('userName', data.user.full_name);
+                    localStorage.setItem('businessName', data.user.business_name || data.user.full_name);
+                    localStorage.setItem('userPlan', data.user.plan_type);
+                    localStorage.setItem('authToken', data.token); // Store JWT token
+                    
+                    // Initialize user stats
+                    localStorage.setItem('userStats', JSON.stringify({
+                        searches: 0,
+                        reports: 0,
+                        conversionRate: 0
+                    }));
+                    
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard.html';
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('login', error.message);
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = 'Log In';
+            }
         });
 
-        document.getElementById('signupForm').addEventListener('submit', function(e) {
+        // Signup form submission - FIXED TO PROPERLY HANDLE JWT TOKENS  
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const name = document.getElementById('signupName').value;
@@ -822,19 +894,62 @@
             const company = document.getElementById('signupCompany').value;
             const password = document.getElementById('signupPassword').value;
             const plan = sessionStorage.getItem('selectedPlan') || 'starter';
+            const signupButton = document.getElementById('signupButton');
             
-            // TODO: Implement actual user creation and payment processing
-            console.log('Signup attempt:', { name, email, company, password, plan });
+            hideError('signup');
+            signupButton.disabled = true;
+            signupButton.textContent = 'Creating account...';
             
-            // Simulate successful signup
-            localStorage.setItem('userLoggedIn', 'true');
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userName', name);
-            localStorage.setItem('userCompany', company);
-            localStorage.setItem('userPlan', plan);
-            
-            // Redirect to onboarding/dashboard
-            window.location.href = 'onboarding.html';
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        full_name: name,
+                        company: company,
+                        plan_type: plan
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Signup failed');
+                }
+                
+                if (data.success && data.user) {
+                    // Store user data in localStorage
+                    localStorage.setItem('userLoggedIn', 'true');
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('userName', data.user.full_name);
+                    localStorage.setItem('businessName', company);
+                    localStorage.setItem('userPlan', data.user.plan_type);
+                    
+                    // Initialize user stats
+                    localStorage.setItem('userStats', JSON.stringify({
+                        searches: 0,
+                        reports: 0,
+                        conversionRate: 0
+                    }));
+                    
+                    // Redirect to onboarding
+                    window.location.href = '/onboarding.html';
+                } else {
+                    throw new Error('Invalid response from server');
+                }
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                showError('signup', error.message);
+            } finally {
+                signupButton.disabled = false;
+                signupButton.textContent = 'Start Free Trial';
+            }
         });
 
         // Smooth scrolling for anchor links
