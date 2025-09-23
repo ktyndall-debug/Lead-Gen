@@ -1,0 +1,28 @@
+{
+  "name": "business-intelligence-pro-saas",
+  "version": "1.0.0",
+  "description": "SaaS platform for business intelligence and prospect discovery",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3",
+    "stripe": "^14.12.0",
+    "nodemailer": "^6.9.8"
+  },
+  "devDependencies": {
+    "vercel": "^32.7.2"
+  },
+  "keywords": [
+    "saas",
+    "business-intelligence",
+    "prospect-discovery",
+    "lead-generation"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
