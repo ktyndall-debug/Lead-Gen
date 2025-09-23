@@ -1,101 +1,76 @@
-# Business Intelligence Tool - Fixed Version
+# Business Intelligence Pro - SaaS Platform
 
-## Issues Found and Fixed
+A comprehensive SaaS platform for business intelligence and prospect discovery, designed for agencies and marketing professionals.
 
-### Original Critical Issues:
-1. **Incorrect File Structure** - API files were in root directory, not in `/api` folder (FIXED)
-2. **Inappropriate Content** - Line 405 in `index.html` contained inappropriate text (FIXED)  
-3. **Build Configuration** - Vercel build configuration issues (FIXED)
+## 🚀 Quick Setup
 
-### Vercel Build Error Fix:
-The "No Output Directory named 'public' found" error was caused by Vercel trying to build this as a Node.js project when it's actually a static site with serverless functions.
+### 1. Database Setup (Supabase)
+1. Create a Supabase account at [supabase.com](https://supabase.com)
+2. Create a new project
+3. Run the SQL script in `database-schema.sql` in your Supabase SQL Editor
+4. Copy your connection string from Supabase
 
-**Solution Applied:**
-- Removed unnecessary `package.json` (static sites don't need it)
-- Simplified `vercel.json` to minimal configuration: `{}`
-- Vercel will now treat this as a static site with API functions
+### 2. Deploy to Vercel
+1. Connect this repository to Vercel
+2. Add these environment variables in Vercel:
+   ```
+   DATABASE_URL=your-supabase-connection-string
+   JWT_SECRET=your-super-long-random-secret-key
+   GOOGLE_PLACES_API_KEY=your-google-places-api-key
+   ```
+3. Deploy!
 
-## Project Structure (Minimal & Working)
+### 3. Test Your Installation
+- Visit: `https://your-app.vercel.app/api/test-db` to test database connection
+- Visit: `https://your-app.vercel.app/index-saas.html` for the main SaaS landing page
+
+## 📁 File Structure
 
 ```
-business-intelligence-tool/
-├── index.html              # Landing page (static)
-├── tool.html               # Business intelligence tool (static)
-├── api/                    # Serverless functions
-│   ├── search-places.js    # Google Places search endpoint
-│   └── place-details.js    # Google Places details endpoint
-├── vercel.json            # Minimal Vercel config: {}
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
+├── api/
+│   ├── auth/
+│   │   ├── login.js          # User authentication
+│   │   └── register.js       # User registration
+│   └── test-db.js            # Database connection test
+├── dashboard.html            # User dashboard
+├── index-saas.html          # SaaS landing page
+├── onboarding.html          # User profile setup
+├── report.html              # Customized business reports
+├── tool.html                # Original business intelligence tool
+├── package.json             # Dependencies
+├── vercel.json              # Vercel configuration
+├── database-schema.sql      # Complete database setup
+└── SAAS-IMPLEMENTATION-GUIDE.md  # Detailed implementation guide
 ```
 
-## How Vercel Will Deploy This:
+## 💰 Subscription Plans
 
-1. **Static Files**: `index.html` and `tool.html` served directly
-2. **API Endpoints**: 
-   - `/api/search-places` → `api/search-places.js`
-   - `/api/place-details` → `api/place-details.js`
-3. **Environment Variables**: `GOOGLE_PLACES_API_KEY` loaded automatically
+- **Starter ($97/mo):** 100 searches, basic features
+- **Professional ($197/mo):** 500 searches, custom branding, CRM integration
+- **Agency ($397/mo):** Unlimited searches, white-label, API access
 
-## Deployment Steps
+## 🔧 Features
 
-### 1. Environment Variable (Already Done)
-In Vercel dashboard:
-- `GOOGLE_PLACES_API_KEY` = your new Google API key
+- ✅ Multi-tenant user authentication
+- ✅ Subscription management
+- ✅ Custom branded reports
+- ✅ Business prospect discovery
+- ✅ Usage analytics and limits
+- ✅ Professional client proposals
+- ✅ White-label capabilities
 
-### 2. Deploy
-```bash
-# Push to GitHub
-git add .
-git commit -m "Fix Vercel build configuration"
-git push
+## 📞 Support
 
-# Vercel will automatically rebuild
-```
+For implementation questions, refer to `SAAS-IMPLEMENTATION-GUIDE.md`
 
-### 3. Expected Behavior
-- Build should complete without errors
-- Static files served from root
-- API functions available at `/api/*`
-- No "public directory" error
+## 🎯 Next Steps
 
-## What Changed to Fix Build Error
+1. Set up your database with the provided schema
+2. Configure environment variables in Vercel
+3. Test the authentication system
+4. Add Stripe integration for payments
+5. Launch and start acquiring customers!
 
-### Before (Problematic):
-- Had `package.json` with build scripts
-- Vercel tried to run `npm run build`
-- Expected output in `public/` directory
-- Failed because no build process needed
+---
 
-### After (Fixed):
-- No `package.json` needed for static sites
-- Minimal `vercel.json`: `{}`
-- Vercel auto-detects static files
-- API functions work automatically
-
-## Testing After Deployment
-
-1. Visit `https://your-app.vercel.app/` → Should show landing page
-2. Visit `https://your-app.vercel.app/tool.html` → Should show tool
-3. Try searching businesses → Should work with real data
-4. Check browser console → Should see API calls to `/api/search-places`
-
-## If Still Having Issues
-
-### Check Vercel Function Logs:
-```bash
-vercel logs --follow
-```
-
-### Common Issues:
-1. **API Key Not Set**: Check environment variables in Vercel dashboard
-2. **API Limits Exceeded**: Check Google Cloud Console quotas
-3. **CORS Errors**: API functions include CORS headers, should work
-4. **Function Timeout**: Increased to 30s for search, 15s for details
-
-## Security Notes
-- New API key should be domain-restricted
-- Environment variables secure in Vercel
-- No sensitive data in frontend code
-
-The build error should be resolved with this simplified configuration. Vercel will now properly handle the static files and serverless functions without trying to run unnecessary build processes.
+**Transform your business intelligence tool into a profitable SaaS platform!**

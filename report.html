@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Analysis Report</title>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-600: #475569;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .report-header {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .user-branding {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .user-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+            font-size: 1.5rem;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .user-info h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .user-tagline {
+            color: var(--gray-600);
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+
+        .user-contact {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .report-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .report-subtitle {
+            color: var(--gray-600);
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            background: var(--gray-100);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--gray-100);
+        }
+
+        .section-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: white;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--gray-900);
+        }
+
+        .business-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 25px;
+            background: var(--gray-50);
+            border-radius: 12px;
+            border-top: 4px solid var(--primary);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .metric-label {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .issue-card, .solution-card {
+            background: var(--gray-50);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 6px solid var(--danger);
+        }
+
+        .solution-card {
+            border-left-color: var(--success);
+        }
+
+        .issue-title, .solution-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .issue-title {
+            color: var(--danger);
+        }
+
+        .solution-title {
+            color: var(--success);
+        }
+
+        .issue-description, .solution-description {
+            color: var(--gray-700);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .impact-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .impact-high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .impact-medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .impact-low {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .cost-breakdown {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid #93c5fd;
+        }
+
+        .cost-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .cost-amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .cost-label {
+            color: #1e3a8a;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .cost-items {
+            display: grid;
+            gap: 12px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--gray-700);
+            border: 2px solid var(--gray-200);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        .cta-section {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .cta-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        .cta-text {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            opacity: 0.95;
+        }
+
+        .cta-button {
+            background: white;
+            color: var(--success);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .action-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .report-header, .section {
+                padding: 25px 20px;
+            }
+
+            .user-branding {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .user-contact {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .business-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .report-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="reportContainer">
+        <!-- Report will be dynamically generated here -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            generateCustomizedReport();
+        });
+
+        function generateCustomizedReport() {
+            const reportData = JSON.parse(localStorage.getItem('currentReport') || '{}');
+            
+            if (!reportData.business || !reportData.userProfile) {
+                document.getElementById('reportContainer').innerHTML = `
+                    <div style="text-align: center; padding: 100px 20px;">
+                        <h2>No Report Data Found</h2>
+                        <p>Please generate a report from the dashboard first.</p>
+                        <button onclick="window.close()" class="btn btn-primary">Close Window</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const business = reportData.business;
+            const profile = reportData.userProfile;
+            
+            // Set CSS custom properties for user's brand color
+            if (profile.brandColor) {
+                document.documentElement.style.setProperty('--primary', profile.brandColor);
+            }
+
+            const reportHTML = `
+                <!-- Report Header with User Branding -->
+                <div class="report-header">
+                    <div class="user-branding">
+                        <div class="user-logo" id="userLogo" style="background-color: ${profile.brandColor || '#667eea'}">
+                            ${profile.businessName ? profile.businessName.substring(0, 2).toUpperCase() : 'BZ'}
+                        </div>
+                        <div class="user-info">
+                            <h1>${profile.businessName || 'Your Business'}</h1>
+                            <div class="user-tagline">${profile.tagline || 'Professional Digital Marketing Services'}</div>
+                            <div class="user-contact">
+                                <div class="contact-item">📞 ${profile.phone || '(555) 123-4567'}</div>
+                                <div class="contact-item">🌐 ${profile.website || 'www.yourbusiness.com'}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h1 class="report-title">Digital Growth Analysis</h1>
+                    <p class="report-subtitle">Comprehensive Business Intelligence Report for ${business.name}</p>
+                    
+                    <div class="report-meta">
+                        Report Generated: ${new Date().toLocaleDateString()} • Confidential Analysis • Report ID: ${Date.now()}
+                    </div>
+                </div>
+
+                <!-- Executive Summary -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">📊</div>
+                        <h2 class="section-title">Executive Summary</h2>
+                    </div>
+                    
+                    <div class="business-overview">
+                        <div class="metric-card">
+                            <div class="metric-value" style="color: #667eea;">${business.score}</div>
+                            <div class="metric-label">Opportunity Score</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" style="color: #10b981;">${business.rating || 'N/A'}</div>
+                            <div class="metric-label">Current Rating</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" style="color: #f59e0b;">${business.reviews}</div>
+                            <div class="metric-label">Google Reviews</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value" style="color: #ef4444;">${business.opportunity.toUpperCase()}</div>
+                            <div class="metric-label">Priority Level</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Critical Issues -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon" style="background: #ef4444;">⚠️</div>
+                        <h2 class="section-title">Critical Issues Identified</h2>
+                    </div>
+                    
+                    ${generateIssues(business)}
+                </div>
+
+                <!-- Recommended Solutions -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon" style="background: #10b981;">💡</div>
+                        <h2 class="section-title">Recommended Solutions</h2>
+                    </div>
+                    
+                    ${generateSolutions(business)}
+                </div>
+
+                <!-- Investment Analysis -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-icon" style="background: #3b82f6;">💰</div>
+                        <h2 class="section-title">Investment Analysis</h2>
+                    </div>
+                    
+                    <div class="cost-breakdown">
+                        <div class="cost-header">
+                            <div class="cost-amount">${calculateCost(business)}</div>
+                            <div class="cost-label">Total Investment Range</div>
+                        </div>
+                        
+                        <div class="cost-items">
+                            ${generateCostBreakdown(business)}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Next Steps -->
+                <div class="cta-section">
+                    <h2 class="cta-title">Ready to Transform Your Digital Presence?</h2>
+                    <p class="cta-text">Schedule a free consultation to discuss your custom growth strategy</p>
+                    <button class="cta-button" onclick="contactConsultation()">
+                        Schedule Free Consultation
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="window.print()">
+                        🖨️ Print Report
+                    </button>
+                    <button class="btn btn-primary" onclick="downloadReport()">
+                        📄 Download PDF
+                    </button>
+                    <button class="btn btn-secondary" onclick="emailReport()">
+                        📧 Email Report
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('reportContainer').innerHTML = reportHTML;
+            
+            // Set user logo if available
+            if (profile.logo) {
+                const logoElement = document.getElementById('userLogo');
+                logoElement.style.backgroundImage = `url(${profile.logo})`;
+                logoElement.style.backgroundSize = 'cover';
+                logoElement.style.backgroundPosition = 'center';
+                logoElement.textContent = '';
+            }
+        }
+
+        function generateIssues(business) {
+            const issues = [];
+            
+            if (!business.website) {
+                issues.push({
+                    title: 'No Professional Website',
+                    description: 'Missing a professional website means losing 75% of potential customers who research online before visiting.',
+                    impact: 'high'
+                });
+            }
+            
+            if (business.reviews < 10) {
+                issues.push({
+                    title: 'Insufficient Online Reviews',
+                    description: `Only ${business.reviews} Google reviews. Businesses with 25+ reviews get 25% more customers.`,
+                    impact: 'high'
+                });
+            }
+            
+            if (business.rating === 0 || business.rating < 4.0) {
+                issues.push({
+                    title: 'Poor Online Rating',
+                    description: `Current rating of ${business.rating || 'no rating'} is below the 4.0+ threshold customers expect.`,
+                    impact: 'medium'
+                });
+            }
+
+            return issues.map(issue => `
+                <div class="issue-card">
+                    <div class="issue-title">${issue.title}</div>
+                    <div class="issue-description">${issue.description}</div>
+                    <span class="impact-tag impact-${issue.impact}">${issue.impact.toUpperCase()} IMPACT</span>
+                </div>
+            `).join('');
+        }
+
+        function generateSolutions(business) {
+            const solutions = [];
+            
+            if (!business.website) {
+                solutions.push({
+                    title: 'Professional Website Development',
+                    description: 'Create a modern, mobile-responsive website with clear calls-to-action and service information.',
+                    timeline: '2-3 weeks'
+                });
+            }
+            
+            if (business.reviews < 25) {
+                solutions.push({
+                    title: 'Review Generation Strategy',
+                    description: 'Implement automated review request system and customer service training.',
+                    timeline: '2-4 weeks'
+                });
+            }
+            
+            solutions.push({
+                title: 'Local SEO Optimization',
+                description: 'Optimize Google Business Profile and local search rankings for increased visibility.',
+                timeline: '1-2 weeks'
+            });
+
+            return solutions.map(solution => `
+                <div class="solution-card">
+                    <div class="solution-title">${solution.title}</div>
+                    <div class="solution-description">${solution.description}</div>
+                    <small style="color: #059669; font-weight: 600;">Timeline: ${solution.timeline}</small>
+                </div>
+            `).join('');
+        }
+
+        function calculateCost(business) {
+            let baseCost = 1500;
+            
+            if (!business.website) baseCost += 2500;
+            if (business.reviews < 10) baseCost += 800;
+            baseCost += 1500; // SEO + management
+            
+            const highEnd = Math.round(baseCost * 1.3);
+            return `$${baseCost.toLocaleString()} - $${highEnd.toLocaleString()}`;
+        }
+
+        function generateCostBreakdown(business) {
+            const items = [];
+            
+            if (!business.website) {
+                items.push('<div class="cost-item"><span>Professional Website Development</span><span>$2,500</span></div>');
+            }
+            
+            if (business.reviews < 10) {
+                items.push('<div class="cost-item"><span>Review Management System</span><span>$800</span></div>');
+            }
+            
+            items.push(
+                '<div class="cost-item"><span>Google Business Optimization</span><span>$500</span></div>',
+                '<div class="cost-item"><span>Local SEO Package</span><span>$1,000</span></div>',
+                '<div class="cost-item"><span>Project Management & Strategy</span><span>$500</span></div>'
+            );
+            
+            return items.join('');
+        }
+
+        function contactConsultation() {
+            const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            const phone = profile.phone || '(555) 123-4567';
+            
+            if (confirm(`Call ${phone} to schedule your consultation?`)) {
+                window.open(`tel:${phone}`);
+            }
+        }
+
+        function downloadReport() {
+            window.print();
+            alert('Use your browser\'s "Save as PDF" option in the print dialog to download this report.');
+        }
+
+        function emailReport() {
+            const business = JSON.parse(localStorage.getItem('currentReport') || '{}').business;
+            const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            
+            const subject = encodeURIComponent(`Digital Growth Analysis for ${business.name}`);
+            const body = encodeURIComponent(`Hi there,
+
+I've completed a comprehensive digital growth analysis for ${business.name} and identified significant opportunities to increase your revenue.
+
+The analysis shows specific areas where your business could benefit from digital marketing improvements, including website optimization, review management, and local SEO.
+
+I'd love to schedule a brief 15-minute call to walk you through the findings and discuss how we can help ${business.name} capture these opportunities.
+
+When would be a good time for a quick conversation?
+
+Best regards,
+${profile.businessName || 'Your Business'}
+${profile.phone || '(555) 123-4567'}
+${profile.website || 'www.yourbusiness.com'}`);
+            
+            window.open(`mailto:?subject=${subject}&body=${body}`);
+        }
+    </script>
+</body>
+</html>
