@@ -17,7 +17,9 @@
             --danger: #ef4444;
             --gray-50: #f8fafc;
             --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
             --gray-600: #475569;
+            --gray-700: #334155;
             --gray-900: #0f172a;
         }
 
@@ -129,7 +131,7 @@
 
         .dashboard-header {
             display: flex;
-            justify-content: between;
+            justify-content: space-between;
             align-items: center;
             margin-bottom: 40px;
             background: white;
@@ -297,6 +299,7 @@
 
         .form-group {
             margin-bottom: 20px;
+            position: relative;
         }
 
         .form-group label {
@@ -314,6 +317,12 @@
             border-radius: 8px;
             font-size: 1rem;
             transition: border-color 0.3s ease;
+            background: white;
+            color: var(--gray-900);
+        }
+
+        .form-group input::placeholder {
+            color: var(--gray-500);
         }
 
         .form-group input:focus,
@@ -321,6 +330,50 @@
             outline: none;
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Autocomplete dropdown */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--primary);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--gray-100);
+            transition: background-color 0.2s ease;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.selected {
+            background-color: var(--gray-50);
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-main {
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+
+        .autocomplete-secondary {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-top: 2px;
         }
 
         .search-btn {
@@ -336,7 +389,7 @@
             transition: all 0.3s ease;
         }
 
-        .search-btn:hover {
+        .search-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
@@ -493,6 +546,18 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
         }
 
         /* Responsive */
@@ -655,7 +720,8 @@
                     <div class="search-grid">
                         <div class="form-group">
                             <label for="location">📍 Target Location</label>
-                            <input type="text" id="location" placeholder="City, State or ZIP" required>
+                            <input type="text" id="location" placeholder="Type city name (e.g. Austin, TX)" required>
+                            <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
                         </div>
                         <div class="form-group">
                             <label for="radius">🔍 Search Radius</label>
@@ -688,6 +754,9 @@
                     </button>
                 </form>
                 
+                <!-- Error Message -->
+                <div class="error-message" id="errorMessage"></div>
+                
                 <!-- Loading -->
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
@@ -709,17 +778,24 @@
     </div>
 
     <script>
+        // Global variables
+        let currentBusinesses = [];
+        let authToken = null;
+        let autocompleteTimeout = null;
+        let selectedIndex = -1;
+
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
             loadUserProfile();
             updateStats();
+            setupAutocomplete();
         });
 
         function initializeDashboard() {
             // Check if user is logged in
             if (!localStorage.getItem('userLoggedIn')) {
-                window.location.href = 'index-saas.html';
+                window.location.href = '/';
                 return;
             }
 
@@ -759,7 +835,7 @@
                 professional: 500,
                 agency: 'Unlimited'
             };
-            document.getElementById('planLimit').textContent = limits[userPlan] || 100;
+            document.getElementById('planLimit').textContent = limits[userPlan] || 500;
         }
 
         function updateStats() {
@@ -778,7 +854,119 @@
 
         function logout() {
             localStorage.clear();
-            window.location.href = 'index-saas.html';
+            window.location.href = '/';
+        }
+
+        function setupAutocomplete() {
+            const locationInput = document.getElementById('location');
+            const dropdown = document.getElementById('autocompleteDropdown');
+
+            locationInput.addEventListener('input', function(e) {
+                const input = e.target.value.trim();
+                
+                if (autocompleteTimeout) {
+                    clearTimeout(autocompleteTimeout);
+                }
+
+                if (input.length < 2) {
+                    hideDropdown();
+                    return;
+                }
+
+                // Debounce the autocomplete requests
+                autocompleteTimeout = setTimeout(() => {
+                    fetchAutocomplete(input);
+                }, 300);
+            });
+
+            locationInput.addEventListener('blur', function() {
+                // Hide dropdown after a short delay to allow clicks
+                setTimeout(() => hideDropdown(), 150);
+            });
+
+            locationInput.addEventListener('keydown', function(e) {
+                const items = dropdown.querySelectorAll('.autocomplete-item');
+                
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelection(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelection(items);
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    selectItem(items[selectedIndex]);
+                } else if (e.key === 'Escape') {
+                    hideDropdown();
+                }
+            });
+        }
+
+        async function fetchAutocomplete(input) {
+            try {
+                const response = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(input)}`);
+                const data = await response.json();
+
+                if (data.success && data.predictions.length > 0) {
+                    showDropdown(data.predictions);
+                } else {
+                    hideDropdown();
+                }
+            } catch (error) {
+                console.error('Autocomplete error:', error);
+                hideDropdown();
+            }
+        }
+
+        function showDropdown(predictions) {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            dropdown.innerHTML = '';
+            selectedIndex = -1;
+
+            predictions.forEach((prediction, index) => {
+                const item = document.createElement('div');
+                item.className = 'autocomplete-item';
+                item.innerHTML = `
+                    <div class="autocomplete-main">${prediction.main_text}</div>
+                    <div class="autocomplete-secondary">${prediction.secondary_text}</div>
+                `;
+                
+                item.addEventListener('click', () => selectItem(item, prediction));
+                dropdown.appendChild(item);
+            });
+
+            dropdown.style.display = 'block';
+        }
+
+        function hideDropdown() {
+            const dropdown = document.getElementById('autocompleteDropdown');
+            dropdown.style.display = 'none';
+            selectedIndex = -1;
+        }
+
+        function updateSelection(items) {
+            items.forEach((item, index) => {
+                if (index === selectedIndex) {
+                    item.classList.add('selected');
+                } else {
+                    item.classList.remove('selected');
+                }
+            });
+        }
+
+        function selectItem(item, prediction) {
+            const locationInput = document.getElementById('location');
+            if (prediction) {
+                locationInput.value = prediction.description;
+            } else {
+                // Extract text from the item
+                const mainText = item.querySelector('.autocomplete-main').textContent;
+                const secondaryText = item.querySelector('.autocomplete-secondary').textContent;
+                locationInput.value = secondaryText ? `${mainText}, ${secondaryText}` : mainText;
+            }
+            hideDropdown();
         }
 
         // Search functionality
@@ -791,7 +979,7 @@
             const maxResults = document.getElementById('maxResults').value;
             
             if (!location || !businessType) {
-                alert('Please fill in all required fields');
+                showError('Please fill in all required fields');
                 return;
             }
             
@@ -799,13 +987,14 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('results').style.display = 'none';
             document.getElementById('searchButton').disabled = true;
+            hideError();
             
             try {
                 // Make real API call to search businesses
                 await searchBusinesses(location, businessType, radius, maxResults);
             } catch (error) {
                 console.error('Search error:', error);
-                alert('Search failed: ' + error.message);
+                showError('Search failed: ' + error.message);
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('searchButton').disabled = false;
@@ -834,6 +1023,7 @@
             }
             
             if (data.success && data.results) {
+                currentBusinesses = data.results;
                 displayResults(data.results);
                 
                 // Update user stats
@@ -846,33 +1036,6 @@
             }
         }
 
-        function generateMockBusinesses(count) {
-            const businessNames = [
-                'Local Cafe & Bakery', 'Elite Auto Repair', 'Sunshine Hair Salon', 
-                'Downtown Pizza', 'Tech Solutions Inc', 'Family Dental Care',
-                'Green Thumb Landscaping', 'City Fitness Center', 'Artisan Jewelry',
-                'Quick Print Services'
-            ];
-            
-            const businesses = [];
-            for (let i = 0; i < count; i++) {
-                const score = Math.floor(Math.random() * 70) + 30;
-                businesses.push({
-                    name: businessNames[i % businessNames.length] + (i > 9 ? ` ${Math.floor(i/10) + 1}` : ''),
-                    type: 'local business',
-                    address: `${Math.floor(Math.random() * 9999) + 1000} Main St, City, ST`,
-                    phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-                    website: Math.random() > 0.4 ? null : 'www.example.com',
-                    rating: Math.random() > 0.3 ? (Math.random() * 2 + 3).toFixed(1) : 0,
-                    reviews: Math.floor(Math.random() * 50),
-                    score: score,
-                    opportunity: score > 60 ? 'high' : score > 40 ? 'medium' : 'low'
-                });
-            }
-            
-            return businesses.sort((a, b) => b.score - a.score);
-        }
-
         function displayResults(businesses) {
             document.getElementById('resultsCount').textContent = `${businesses.length} Results`;
             
@@ -882,7 +1045,11 @@
             businesses.forEach((business, index) => {
                 const card = document.createElement('div');
                 card.className = 'business-card';
-                card.onclick = () => generateCustomReport(business);
+                card.onclick = () => generateCustomReport(index);
+                
+                const websiteDisplay = business.website ? 
+                    `<a href="${business.website}" target="_blank" onclick="event.stopPropagation()" style="color: var(--primary);">Visit Website</a>` : 
+                    'No website';
                 
                 card.innerHTML = `
                     <div class="business-header">
@@ -897,7 +1064,7 @@
                             <span>📞</span> ${business.phone}
                         </div>
                         <div class="business-info">
-                            <span>🌐</span> ${business.website || 'No website'}
+                            <span>🌐</span> ${websiteDisplay}
                         </div>
                         <div class="business-info">
                             <span>⭐</span> ${business.rating || 'No rating'} (${business.reviews} reviews)
@@ -917,11 +1084,10 @@
             });
             
             document.getElementById('results').style.display = 'block';
-            window.currentBusinesses = businesses;
         }
 
         function generateCustomReport(businessIndex) {
-            const business = window.currentBusinesses[businessIndex];
+            const business = currentBusinesses[businessIndex];
             const profile = JSON.parse(localStorage.getItem('userProfile') || '{}');
             
             // Update stats
@@ -941,6 +1107,16 @@
             
             // Open report in new tab/window
             window.open('report.html', '_blank');
+        }
+
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
         }
     </script>
 </body>
