@@ -1,14 +1,23 @@
 // api/auth/login.js
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcryptjs';
-import { Pool } from 'pg';
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -34,7 +43,7 @@ export default async function handler(req, res) {
 
       // Set secure cookie
       res.setHeader('Set-Cookie', [
-        `auth-token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax`
+        `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Lax; Max-Age=604800; Path=/`
       ]);
 
       return res.status(200).json({
@@ -95,7 +104,7 @@ export default async function handler(req, res) {
 
     // Set secure cookie
     res.setHeader('Set-Cookie', [
-      `auth-token=${token}; HttpOnly; Path=/; Max-Age=604800; SameSite=Lax`
+      `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Lax; Max-Age=604800; Path=/`
     ]);
 
     // Return user data and token
@@ -105,7 +114,7 @@ export default async function handler(req, res) {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
-        business_name: user.business_name,
+        business_name: user.business_name || user.full_name,
         plan_type: user.plan_type || 'starter',
         email_verified: user.email_verified
       },
@@ -114,6 +123,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
-}
+};

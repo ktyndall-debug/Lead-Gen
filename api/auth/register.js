@@ -1,14 +1,23 @@
 // api/auth/register.js
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  // Handle CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -45,17 +54,17 @@ export default async function handler(req, res) {
 
     // Create user
     const userResult = await client.query(`
-      INSERT INTO users (email, password_hash, full_name, email_verified)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO users (email, password_hash, full_name, email_verified, is_active, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id, email, full_name, created_at
-    `, [email.toLowerCase(), passwordHash, full_name, false]);
+    `, [email.toLowerCase(), passwordHash, full_name, false, true]);
 
     const user = userResult.rows[0];
 
     // Create initial profile
     await client.query(`
-      INSERT INTO user_profiles (user_id, business_name, industry)
-      VALUES ($1, $2, $3)
+      INSERT INTO user_profiles (user_id, business_name, industry, created_at, updated_at)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `, [user.id, company || full_name, 'other']);
 
     // Create trial subscription
@@ -63,14 +72,14 @@ export default async function handler(req, res) {
     trialEnd.setDate(trialEnd.getDate() + 14); // 14-day free trial
 
     await client.query(`
-      INSERT INTO subscriptions (user_id, plan_type, status, trial_end, current_period_start, current_period_end)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO subscriptions (user_id, plan_type, status, trial_end, current_period_start, current_period_end, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `, [user.id, plan_type, 'trialing', trialEnd, new Date(), trialEnd]);
 
     // Track registration
     await client.query(`
-      INSERT INTO usage_analytics (user_id, action_type, metadata, ip_address, user_agent)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO usage_analytics (user_id, action_type, metadata, ip_address, user_agent, created_at)
+      VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
     `, [
       user.id, 
       'user_registered', 
@@ -94,7 +103,7 @@ export default async function handler(req, res) {
 
     // Set secure cookie
     res.setHeader('Set-Cookie', [
-      `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Strict; Max-Age=604800; Path=/`
+      `auth-token=${token}; HttpOnly; Secure=${process.env.NODE_ENV === 'production'}; SameSite=Lax; Max-Age=604800; Path=/`
     ]);
 
     res.status(201).json({
@@ -103,18 +112,20 @@ export default async function handler(req, res) {
         id: user.id,
         email: user.email,
         full_name: user.full_name,
+        business_name: company || full_name,
         plan_type: plan_type,
         trial_end: trialEnd,
         created_at: user.created_at
       },
+      token: token,
       message: 'Account created successfully! You have a 14-day free trial.'
     });
 
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Failed to create account' });
+    res.status(500).json({ error: 'Failed to create account. Please try again.' });
   } finally {
     client.release();
   }
-}
+};
